@@ -1,14 +1,18 @@
 import consts.{esc}
-import gleam/io.{print}
+import gleam/io
 
 pub fn clear() {
-  print(esc <> "[2J")
+  io.print(esc <> "[2J")
 }
 
 pub fn enter_alternative() {
-  print(esc <> "[?1049h")
+  io.print(esc <> "[?1049h")
 }
 
 pub fn exit_alternative() {
-  print(esc <> "[?1049l")
+  io.print(esc <> "[?1049l")
+}
+
+pub fn println(s: String) {
+  io.print(esc <> "[1E" <> s)
 }

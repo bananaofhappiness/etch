@@ -105,7 +105,7 @@ pub fn default(s: String) -> String {
   esc <> "[39m" <> s <> esc <> "[0m"
 }
 
-pub fn with_bg_black(s: String) -> String {
+pub fn with_on_black(s: String) -> String {
   esc <> "[40m" <> s
   // <> esc <> "[0m"
 }
