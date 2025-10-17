@@ -1,6 +1,16 @@
 import esc.{esc}
 import gleam/int
 
+pub type CursorStyle {
+  DefaultUserShape
+  BlinkingBlock
+  SteadyBlock
+  BlinkingUnderScore
+  SteadyUnderScore
+  BlinkingBar
+  SteadyBar
+}
+
 pub fn move_to(x: Int, y: Int) -> String {
   esc("[") <> int.to_string(x) <> ";" <> int.to_string(y) <> "H"
 }
@@ -26,8 +36,7 @@ pub fn move_to_column(n: Int) -> String {
 }
 
 pub fn move_to_row(n: Int) -> String {
-  todo
-  // esc("[") <> int.to_string(n) <> "G"
+  esc("[") <> int.to_string(n) <> "d"
 }
 
 pub fn move_right(n: Int) -> String {
@@ -44,4 +53,16 @@ pub fn move_up(n: Int) -> String {
 
 pub fn move_down(n: Int) -> String {
   esc("[") <> int.to_string(n) <> "B"
+}
+
+pub fn set_cursor_style(s: CursorStyle) -> String {
+  case s {
+    DefaultUserShape -> esc("[0 q")
+    BlinkingBlock -> esc("[1 q")
+    SteadyBlock -> esc("[2 q")
+    BlinkingUnderScore -> esc("[3 q")
+    SteadyUnderScore -> esc("[4 q")
+    BlinkingBar -> esc("[5 q")
+    SteadyBar -> esc("[6 q")
+  }
 }

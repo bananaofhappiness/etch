@@ -1,18 +1,19 @@
 import command.{
-  type Command, DisableBlinking, EnableBlinking, EnterAlternateScreen, EnterRaw,
-  HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo,
-  MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print,
-  PrintReset, Println, PrintlnReset, SetCursorStyle, ShowCursor,
+  type Command, Clear, EnterAlternateScreen, EnterRaw, HideCursor,
+  LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn,
+  MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print, PrintReset,
+  Println, PrintlnReset, SetCursorStyle, SetSize, ShowCursor,
 }
 import cursor.{
-  move_down, move_left, move_right, move_to, move_to_column, move_to_next_line,
-  move_to_previous_line, move_to_row, move_up,
+  hide, move_down, move_left, move_right, move_to, move_to_column,
+  move_to_next_line, move_to_previous_line, move_to_row, move_up,
+  set_cursor_style, show,
 }
 import esc.{esc}
 import gleam/io
 import gleam/list
 import gleam/string_tree.{type StringTree, append} as stree
-import screen
+import terminal
 
 pub type Queue {
   Queue(commands: List(Command))
@@ -41,47 +42,52 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
         rest,
         tree
           |> append(str)
-          |> append(move_too_next_line(1) <> esc("[0m")),
+          |> append(move_to_next_line(1) <> esc("[0m")),
       )
+
     // Cursor
     [MoveUp(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_up(n)))
     }
     [MoveDown(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_down(n)))
     }
     [MoveLeft(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_left(n)))
     }
     [MoveRight(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_right(n)))
     }
     [MoveToNextLine(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_to_next_line(n)))
     }
     [MoveToPreviousLine(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_to_previous_line(n)))
     }
     [MoveToColumn(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_to_column(n)))
     }
     [MoveToRow(n), ..rest] -> {
-      todo
+      flush_inner(rest, tree |> append(move_to_row(n)))
     }
-    [MoveTo(x, y), ..rest] ->
-      flush_inner(rest, tree |> append(set_position(x, y)))
-    [MoveToNextLine(n), ..rest] ->
-      flush_inner(rest, tree |> append(move_to_next_line(n)))
+    [MoveTo(x, y), ..rest] -> flush_inner(rest, tree |> append(move_to(x, y)))
+    [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(show()))
+    [HideCursor, ..rest] -> flush_inner(rest, tree |> append(hide()))
+    [SetCursorStyle(s), ..rest] ->
+      flush_inner(rest, tree |> append(set_cursor_style(s)))
+
+    // terminal
+    [Clear(t), ..rest] -> flush_inner(rest, tree |> append(terminal.clear(t)))
+    [SetSize(x, y), ..rest] ->
+      flush_inner(rest, tree |> append(terminal.set_size(x, y)))
     [EnterRaw, ..rest] -> {
-      screen.enter_raw()
+      terminal.enter_raw()
       flush_inner(rest, tree)
     }
     [EnterAlternateScreen, ..rest] ->
-      flush_inner(rest, tree |> append(screen.enter_alternative()))
+      flush_inner(rest, tree |> append(terminal.enter_alternative()))
     [LeaveAlternateScreen, ..rest] ->
-      flush_inner(rest, tree |> append(screen.leave_alternative()))
-    [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(show()))
-    [HideCursor, ..rest] -> flush_inner(rest, tree |> append(hide()))
+      flush_inner(rest, tree |> append(terminal.leave_alternative()))
   }
 }
 

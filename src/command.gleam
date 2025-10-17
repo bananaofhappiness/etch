@@ -1,3 +1,6 @@
+import cursor.{type CursorStyle}
+import terminal.{type ClearType}
+
 pub type Command {
   Print(s: String)
   PrintReset(s: String)
@@ -18,11 +21,11 @@ pub type Command {
   // RestorePosition
   ShowCursor
   HideCursor
-  EnableBlinking
-  DisableBlinking
-  SetCursorStyle
+  SetCursorStyle(s: CursorStyle)
 
   //Screen
+  Clear(t: ClearType)
+  SetSize(x: Int, y: Int)
   EnterRaw
   EnterAlternateScreen
   LeaveAlternateScreen
