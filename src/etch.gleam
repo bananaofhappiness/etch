@@ -1,18 +1,17 @@
-import consts.{esc}
+import command.{
+  EnterAlternateScreen, EnterRaw, LeaveAlternateScreen, MoveCursor,
+  MoveToNextLine, Print, PrintReset, Println, PrintlnReset,
+}
 import cursor.{hide, set_position}
 import gleam/erlang/process.{type Subject}
 import gleam/io.{print}
 import gleam/list
-import gleam/string.{to_utf_codepoints, utf_codepoint}
-import screen.{clear, enter_alternative, exit_alternative, println}
-import text.{
-  blinking, bold, dim, inverse, italic, red, reset, underline, with_black,
-  with_blue, with_cyan, with_default, with_green, with_magenta, with_on_black,
-  with_red, with_yellow, yellow,
+import gleam/string.{utf_codepoint}
+import screen.{clear, enter_alternative, leave_alternative}
+import stdout.{Queue, execute, flush, println, queue}
+import style.{
+  blinking, bold, dim, inverse, italic, on, reset, underline, with, with_on,
 }
-
-@external(erlang, "raw", "enter_raw")
-pub fn enter_raw() -> Nil
 
 @external(erlang, "io", "get_chars")
 fn get_chars(chars: String, n: Int) -> String
@@ -20,55 +19,69 @@ fn get_chars(chars: String, n: Int) -> String
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
 
-fn initialize() {
-  enter_raw()
-  enter_alternative()
-  clear()
-  // hide()
-  set_position(0, 0)
-}
-
 pub fn main() {
-  initialize()
-
-  "Initialized!"
-  |> bold
-  |> dim
-  |> italic
-  |> blinking
-  |> inverse
-  |> underline
-  |> println
+  execute([EnterRaw, EnterAlternateScreen])
+  let q = Queue([])
+  let q = q |> queue([EnterAlternateScreen, MoveCursor(0, 0)])
 
   let x =
-    "This one is red "
+    "Initialized!"
+    |> bold
+    |> dim
+    |> italic
+    |> blinking
+    |> inverse
+    |> underline
+
+  let y =
+    "This one is grey "
     |> bold
     |> italic
-    |> red
-    <> "and is with black background"
-    |> with_on_black
+    |> with(style.Grey)
+    <> "and this is dark turquoise"
     |> bold
     |> italic
-    |> red
+    |> on(style.AnsiValue(44))
     <> " "
     <> "so we can easily apply different styles"
     |> dim
     |> inverse
     |> underline
-    |> yellow
-  println(x)
 
-  "Hi from GLEAM! YAAAAAAY!"
-  |> string.to_graphemes
-  |> list.index_map(make_rainbow)
-  |> string.join("")
-  // |> with_on_black
-  |> reset
-  |> println
+  let z =
+    "Hi from GLEAM! YAAAAAY!"
+    |> string.to_graphemes
+    |> list.index_map(make_rainbow)
+    |> string.join("")
+  // |> on(style.AnsiValue(239))
 
-  "Reset" |> println
+  let a = "Reset"
+
+  let q =
+    q
+    |> queue([
+      PrintlnReset(x),
+      PrintReset(y),
+      MoveToNextLine(1),
+      Println(z),
+      PrintReset(""),
+      Print(a),
+      MoveToNextLine(1),
+    ])
+  flush(q)
+  // echo q.commands
+
+  execute([
+    PrintReset(
+      "This one is CadetBlue with HotPink3 background"
+      |> with_on(style.AnsiValue(72), style.AnsiValue(168)),
+    ),
+    MoveToNextLine(1),
+    Print("ok?"),
+  ])
 
   let event = init_event_loop()
+
   loop(event)
 }
 
@@ -103,18 +116,19 @@ fn handle_input(msg: Subject(String)) {
 }
 
 pub fn exit() {
-  exit_alternative()
+  execute([LeaveAlternateScreen])
   halt(0)
 }
 
 fn make_rainbow(s: String, i: Int) -> String {
-  case i % 6 {
-    0 -> with_red(s)
-    1 -> with_yellow(s)
-    2 -> with_green(s)
-    3 -> with_cyan(s)
-    4 -> with_blue(s)
-    5 -> with_magenta(s)
+  case i % 7 {
+    0 -> with(s, style.Red)
+    1 -> with(s, style.AnsiValue(208))
+    2 -> with(s, style.Yellow)
+    3 -> with(s, style.Green)
+    4 -> with(s, style.AnsiValue(14))
+    5 -> with(s, style.Blue)
+    6 -> with(s, style.Magenta)
     _ -> panic as "Unreachable"
   }
 }

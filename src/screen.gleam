@@ -1,18 +1,17 @@
-import consts.{esc}
+import esc.{esc}
 import gleam/io
 
+@external(erlang, "raw", "enter_raw")
+pub fn enter_raw() -> Nil
+
 pub fn clear() {
-  io.print(esc <> "[2J")
+  io.print(esc("[2J"))
 }
 
-pub fn enter_alternative() {
-  io.print(esc <> "[?1049h")
+pub fn enter_alternative() -> String {
+  esc("[?1049h")
 }
 
-pub fn exit_alternative() {
-  io.print(esc <> "[?1049l")
-}
-
-pub fn println(s: String) {
-  io.print(esc <> "[1E" <> s)
+pub fn leave_alternative() -> String {
+  esc("[?1049l")
 }
