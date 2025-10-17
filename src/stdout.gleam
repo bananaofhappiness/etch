@@ -1,9 +1,13 @@
 import command.{
-  type Command, EnterAlternateScreen, EnterRaw, HideCursor, LeaveAlternateScreen,
-  MoveCursor, MoveToNextLine, Print, PrintReset, Println, PrintlnReset,
-  ShowCursor,
+  type Command, DisableBlinking, EnableBlinking, EnterAlternateScreen, EnterRaw,
+  HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo,
+  MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print,
+  PrintReset, Println, PrintlnReset, SetCursorStyle, ShowCursor,
 }
-import cursor
+import cursor.{
+  move_down, move_left, move_right, move_to, move_to_column, move_to_next_line,
+  move_to_previous_line, move_to_row, move_up,
+}
 import esc.{esc}
 import gleam/io
 import gleam/list
@@ -31,21 +35,43 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
     [PrintReset(str), ..rest] ->
       flush_inner(rest, tree |> append(str) |> append(esc("[0m")))
     [Println(str), ..rest] ->
-      flush_inner(
-        rest,
-        tree |> append(str) |> append(cursor.move_to_next_line(1)),
-      )
+      flush_inner(rest, tree |> append(str) |> append(move_to_next_line(1)))
     [PrintlnReset(str), ..rest] ->
       flush_inner(
         rest,
         tree
           |> append(str)
-          |> append(cursor.move_to_next_line(1) <> esc("[0m")),
+          |> append(move_too_next_line(1) <> esc("[0m")),
       )
-    [MoveCursor(x, y), ..rest] ->
-      flush_inner(rest, tree |> append(cursor.set_position(x, y)))
+    // Cursor
+    [MoveUp(n), ..rest] -> {
+      todo
+    }
+    [MoveDown(n), ..rest] -> {
+      todo
+    }
+    [MoveLeft(n), ..rest] -> {
+      todo
+    }
+    [MoveRight(n), ..rest] -> {
+      todo
+    }
+    [MoveToNextLine(n), ..rest] -> {
+      todo
+    }
+    [MoveToPreviousLine(n), ..rest] -> {
+      todo
+    }
+    [MoveToColumn(n), ..rest] -> {
+      todo
+    }
+    [MoveToRow(n), ..rest] -> {
+      todo
+    }
+    [MoveTo(x, y), ..rest] ->
+      flush_inner(rest, tree |> append(set_position(x, y)))
     [MoveToNextLine(n), ..rest] ->
-      flush_inner(rest, tree |> append(cursor.move_to_next_line(n)))
+      flush_inner(rest, tree |> append(move_to_next_line(n)))
     [EnterRaw, ..rest] -> {
       screen.enter_raw()
       flush_inner(rest, tree)
@@ -54,8 +80,8 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, tree |> append(screen.enter_alternative()))
     [LeaveAlternateScreen, ..rest] ->
       flush_inner(rest, tree |> append(screen.leave_alternative()))
-    [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(cursor.show()))
-    [HideCursor, ..rest] -> flush_inner(rest, tree |> append(cursor.hide()))
+    [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(show()))
+    [HideCursor, ..rest] -> flush_inner(rest, tree |> append(hide()))
   }
 }
 
