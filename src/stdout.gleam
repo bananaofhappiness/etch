@@ -2,12 +2,13 @@ import command.{
   type Command, Clear, EnterAlternateScreen, EnterRaw, HideCursor,
   LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn,
   MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print, PrintReset,
-  Println, PrintlnReset, SetCursorStyle, SetSize, ShowCursor,
+  Println, PrintlnReset, RestorePosition, SavePosition, SetCursorStyle, SetSize,
+  ShowCursor,
 }
 import cursor.{
   hide, move_down, move_left, move_right, move_to, move_to_column,
   move_to_next_line, move_to_previous_line, move_to_row, move_up,
-  set_cursor_style, show,
+  restore_position, save_position, set_cursor_style, show,
 }
 import esc.{esc}
 import gleam/io
@@ -71,6 +72,10 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, tree |> append(move_to_row(n)))
     }
     [MoveTo(x, y), ..rest] -> flush_inner(rest, tree |> append(move_to(x, y)))
+    [SavePosition, ..rest] -> flush_inner(rest, tree |> append(save_position()))
+    [RestorePosition, ..rest] ->
+      flush_inner(rest, tree |> append(restore_position()))
+
     [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(show()))
     [HideCursor, ..rest] -> flush_inner(rest, tree |> append(hide()))
     [SetCursorStyle(s), ..rest] ->

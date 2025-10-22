@@ -2,6 +2,7 @@ import cursor.{type CursorStyle}
 import terminal.{type ClearType}
 
 pub type Command {
+  // Printing
   Print(s: String)
   PrintReset(s: String)
   Println(s: String)
@@ -17,8 +18,8 @@ pub type Command {
   MoveToColumn(n: Int)
   MoveToRow(n: Int)
   MoveTo(x: Int, y: Int)
-  // SavePosition
-  // RestorePosition
+  SavePosition
+  RestorePosition
   ShowCursor
   HideCursor
   SetCursorStyle(s: CursorStyle)

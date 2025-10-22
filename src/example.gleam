@@ -2,7 +2,7 @@ import command.{
   Clear, EnterAlternateScreen, EnterRaw, HideCursor, LeaveAlternateScreen,
   MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn, MoveToNextLine,
   MoveToPreviousLine, MoveToRow, MoveUp, Print, PrintReset, Println,
-  PrintlnReset, SetCursorStyle, SetSize, ShowCursor,
+  PrintlnReset, SavePosition, SetCursorStyle, SetSize, ShowCursor,
 }
 import cursor
 import gleam/erlang/process.{type Subject}
@@ -84,8 +84,13 @@ pub fn run() {
   ])
 
   execute([
-    Print("Now we are changing our cursor"),
+    Println("Now we are changing our cursor"),
     SetCursorStyle(cursor.BlinkingBlock),
+    SavePosition,
+    Print(
+      "this is bold and underline"
+      |> style.attributes([style.Bold, style.Underline]),
+    ),
   ])
 
   let event = init_event_loop()
@@ -114,12 +119,12 @@ fn loop(event: Subject(String)) {
 fn handle_input(msg: Subject(String)) {
   let assert Ok(etx) = utf_codepoint(3)
   let etx = string.from_utf_codepoints([etx])
-  let assert Ok(bs) = utf_codepoint(8)
-  let bs = string.from_utf_codepoints([bs])
+  // let assert Ok(bs) = utf_codepoint(8)
+  // let bs = string.from_utf_codepoints([bs])
   case process.receive(msg, 1) {
     Ok("q") -> exit()
     Ok("\r") -> println("")
-    Ok(s) if s == bs -> execute([MoveLeft(1)])
+    // Ok(s) if s == bs -> execute([MoveLeft(1)])
     // Ok("b") ->
     //   execute([
     //     SetCursorStyle(cursor.BlinkingBlock),
@@ -128,7 +133,7 @@ fn handle_input(msg: Subject(String)) {
     //   execute([
     //     SetCursorStyle(cursor.SteadyBlock),
     //   ])
-    Ok("x") -> execute([SetSize(100, 100)])
+    Ok("x") -> print(cursor.restore_position())
     Ok(s) if s == etx -> exit()
     Ok(s) -> print(s)
     Error(_) -> Nil

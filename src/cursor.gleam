@@ -66,3 +66,11 @@ pub fn set_cursor_style(s: CursorStyle) -> String {
     SteadyBar -> esc("[6 q")
   }
 }
+
+pub fn save_position() {
+  esc("7")
+}
+
+pub fn restore_position() {
+  esc("8")
+}
