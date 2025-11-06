@@ -1,4 +1,5 @@
 import cursor.{type CursorStyle}
+import style.{type Attribute, type Color}
 import terminal.{type ClearType}
 
 pub type Command {
@@ -8,7 +9,7 @@ pub type Command {
   Println(s: String)
   PrintlnReset(s: String)
 
-  //Cursor
+  // Cursor
   MoveUp(n: Int)
   MoveDown(n: Int)
   MoveLeft(n: Int)
@@ -24,10 +25,25 @@ pub type Command {
   HideCursor
   SetCursorStyle(s: CursorStyle)
 
-  //Screen
+  // Terminal
+  ScrollUp(n: Int)
+  ScrollDown(n: Int)
   Clear(t: ClearType)
   SetSize(x: Int, y: Int)
+  SetTitle(s: String)
+  DisableLineWrap
+  EnableLineWrap
   EnterRaw
   EnterAlternateScreen
   LeaveAlternateScreen
+  EnableMouseCapture
+  DisableMouseCapture
+
+  // Style
+  SetForegroundColor(c: Color)
+  SetBackgroundColor(c: Color)
+  SetForegroundAndBackgroundColors(fg: Color, bg: Color)
+  ResetColors
+  SetAttributes(attrs: List(Attribute))
+  ResetAttributes
 }
