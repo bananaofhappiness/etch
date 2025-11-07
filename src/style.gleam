@@ -1,4 +1,4 @@
-import esc.{esc}
+import esc.{csi}
 import gleam/int
 import gleam/list
 
@@ -100,38 +100,38 @@ fn get_bg(c: Color) -> String {
 pub fn with(s: String, c: Color) -> String {
   case c {
     Reset -> {
-      s <> esc <> "[0m"
+      s <> csi <> "0m"
     }
-    _ -> esc <> "[" <> get_fg(c) <> "m" <> s
+    _ -> csi <> get_fg(c) <> "m" <> s
   }
 }
 
 pub fn on(s: String, c: Color) -> String {
   case c {
     Reset -> {
-      s <> esc <> "[0m"
+      s <> csi <> "0m"
     }
-    _ -> esc <> "[" <> get_bg(c) <> "m" <> s
+    _ -> csi <> get_bg(c) <> "m" <> s
   }
 }
 
 pub fn with_on(s: String, fg: Color, bg: Color) -> String {
   case fg, bg {
     Reset, Reset -> {
-      s <> esc <> "[0m"
+      s <> csi <> "0m"
     }
     fg, Reset -> {
-      esc <> "[" <> get_fg(fg) <> "m" <> s <> esc <> "[0m"
+      csi <> get_fg(fg) <> "m" <> s <> csi <> "0m"
     }
     Reset, bg -> {
-      esc <> "[" <> get_bg(bg) <> "m" <> s <> esc <> "[0m"
+      csi <> get_bg(bg) <> "m" <> s <> csi <> "0m"
     }
-    fg, bg -> esc <> "[" <> get_fg(fg) <> ";" <> get_bg(bg) <> "m" <> s
+    fg, bg -> csi <> get_fg(fg) <> ";" <> get_bg(bg) <> "m" <> s
   }
 }
 
 pub fn attributes(s: String, a: List(Attribute)) -> String {
-  esc <> "[" <> get_attributes(a) <> "m" <> s
+  csi <> get_attributes(a) <> "m" <> s
 }
 
 fn get_attributes(a: List(Attribute)) -> String {
@@ -148,169 +148,169 @@ fn get_attributes(a: List(Attribute)) -> String {
 }
 
 pub fn bold(s: String) -> String {
-  esc <> "[1m" <> s <> esc <> "[22m"
+  csi <> "1m" <> s <> csi <> "22m"
 }
 
 pub fn dim(s: String) -> String {
-  esc <> "[2m" <> s <> esc <> "[22m"
+  csi <> "2m" <> s <> csi <> "22m"
 }
 
 pub fn italic(s: String) -> String {
-  esc <> "[3m" <> s <> esc <> "[23m"
+  csi <> "3m" <> s <> csi <> "23m"
 }
 
 pub fn underline(s: String) -> String {
-  esc <> "[4m" <> s <> esc <> "[24m"
+  csi <> "4m" <> s <> csi <> "24m"
 }
 
 pub fn blinking(s: String) -> String {
-  esc <> "[5m" <> s <> esc <> "[25m"
+  csi <> "5m" <> s <> csi <> "25m"
 }
 
 pub fn inverse(s: String) -> String {
-  esc <> "[7m" <> s <> esc <> "[27m"
+  csi <> "7m" <> s <> csi <> "27m"
 }
 
 pub fn reset_colors(s: String) -> String {
-  s <> esc <> "[0m"
+  s <> csi <> "0m"
 }
 
 pub fn reset_attributes(s: String) -> String {
-  s <> esc <> "[22;23;24;25;27m"
+  s <> csi <> "22;23;24;25;27m"
 }
 
 pub fn black(s: String) -> String {
-  esc <> "[30m" <> s <> esc <> "[0m"
+  csi <> "30m" <> s <> csi <> "0m"
 }
 
 pub fn red(s: String) -> String {
-  esc <> "[31m" <> s <> esc <> "[0m"
+  csi <> "31m" <> s <> csi <> "0m"
 }
 
 pub fn bright_red(s: String) -> String {
-  esc <> "[91m" <> s <> esc <> "[0m"
+  csi <> "91m" <> s <> csi <> "0m"
 }
 
 pub fn green(s: String) -> String {
-  esc <> "[32m" <> s <> esc <> "[0m"
+  csi <> "32m" <> s <> csi <> "0m"
 }
 
 pub fn bright_green(s: String) -> String {
-  esc <> "[92m" <> s <> esc <> "[0m"
+  csi <> "92m" <> s <> csi <> "0m"
 }
 
 pub fn yellow(s: String) -> String {
-  esc <> "[33m" <> s <> esc <> "[0m"
+  csi <> "33m" <> s <> csi <> "0m"
 }
 
 pub fn bright_yellow(s: String) -> String {
-  esc <> "[93m" <> s <> esc <> "[0m"
+  csi <> "93m" <> s <> csi <> "0m"
 }
 
 pub fn blue(s: String) -> String {
-  esc <> "[34m" <> s <> esc <> "[0m"
+  csi <> "34m" <> s <> csi <> "0m"
 }
 
 pub fn bright_blue(s: String) -> String {
-  esc <> "[94m" <> s <> esc <> "[0m"
+  csi <> "94m" <> s <> csi <> "0m"
 }
 
 pub fn magenta(s: String) -> String {
-  esc <> "[35m" <> s <> esc <> "[0m"
+  csi <> "35m" <> s <> csi <> "0m"
 }
 
 pub fn bright_magenta(s: String) -> String {
-  esc <> "[95m" <> s <> esc <> "[0m"
+  csi <> "95m" <> s <> csi <> "0m"
 }
 
 pub fn cyan(s: String) -> String {
-  esc <> "[36m" <> s <> esc <> "[0m"
+  csi <> "36m" <> s <> csi <> "0m"
 }
 
 pub fn bright_cyan(s: String) -> String {
-  esc <> "[96m" <> s <> esc <> "[0m"
+  csi <> "96m" <> s <> csi <> "0m"
 }
 
 pub fn white(s: String) -> String {
-  esc <> "[37m" <> s <> esc <> "[0m"
+  csi <> "37m" <> s <> csi <> "0m"
 }
 
 pub fn bright_white(s: String) -> String {
-  esc <> "[97m" <> s <> esc <> "[0m"
+  csi <> "97m" <> s <> csi <> "0m"
 }
 
 pub fn bright_grey(s: String) -> String {
-  esc <> "[38;5;7m" <> s <> esc <> "[0m"
+  csi <> "38;5;7m" <> s <> csi <> "0m"
 }
 
 pub fn grey(s: String) -> String {
-  esc <> "[90m" <> s <> esc <> "[0m"
+  csi <> "90m" <> s <> csi <> "0m"
 }
 
 pub fn on_black(s: String) -> String {
-  esc <> "[40m" <> s <> esc <> "[0m"
+  csi <> "40m" <> s <> csi <> "0m"
 }
 
 pub fn on_red(s: String) -> String {
-  esc <> "[41m" <> s <> esc <> "[0m"
+  csi <> "41m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_red(s: String) -> String {
-  esc <> "[101m" <> s <> esc <> "[0m"
+  csi <> "101m" <> s <> csi <> "0m"
 }
 
 pub fn on_green(s: String) -> String {
-  esc <> "[42m" <> s <> esc <> "[0m"
+  csi <> "42m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_green(s: String) -> String {
-  esc <> "[102m" <> s <> esc <> "[0m"
+  csi <> "102m" <> s <> csi <> "0m"
 }
 
 pub fn on_yellow(s: String) -> String {
-  esc <> "[43m" <> s <> esc <> "[0m"
+  csi <> "43m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_yellow(s: String) -> String {
-  esc <> "[103m" <> s <> esc <> "[0m"
+  csi <> "103m" <> s <> csi <> "0m"
 }
 
 pub fn on_blue(s: String) -> String {
-  esc <> "[44m" <> s <> esc <> "[0m"
+  csi <> "44m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_blue(s: String) -> String {
-  esc <> "[104m" <> s <> esc <> "[0m"
+  csi <> "104m" <> s <> csi <> "0m"
 }
 
 pub fn on_magenta(s: String) -> String {
-  esc <> "[45m" <> s <> esc <> "[0m"
+  csi <> "45m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_magenta(s: String) -> String {
-  esc <> "[105m" <> s <> esc <> "[0m"
+  csi <> "105m" <> s <> csi <> "0m"
 }
 
 pub fn on_cyan(s: String) -> String {
-  esc <> "[46m" <> s <> esc <> "[0m"
+  csi <> "46m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_cyan(s: String) -> String {
-  esc <> "[106m" <> s <> esc <> "[0m"
+  csi <> "106m" <> s <> csi <> "0m"
 }
 
 pub fn on_white(s: String) -> String {
-  esc <> "[47m" <> s <> esc <> "[0m"
+  csi <> "47m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_white(s: String) -> String {
-  esc <> "[107m" <> s <> esc <> "[0m"
+  csi <> "107m" <> s <> csi <> "0m"
 }
 
 pub fn on_bright_grey(s: String) -> String {
-  esc <> "[48;5;7m" <> s <> esc <> "[0m"
+  csi <> "48;5;7m" <> s <> csi <> "0m"
 }
 
 pub fn on_grey(s: String) -> String {
-  esc <> "[100m" <> s <> esc <> "[0m"
+  csi <> "100m" <> s <> csi <> "0m"
 }

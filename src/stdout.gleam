@@ -13,7 +13,7 @@ import cursor.{
   move_to_next_line, move_to_previous_line, move_to_row, move_up,
   restore_position, save_position, set_cursor_style, show,
 }
-import esc.{esc}
+import esc.{csi}
 import event.{disable_mouse_capture, enable_mouse_capture}
 import gleam/io
 import gleam/list
@@ -43,7 +43,7 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
     [] -> io.print(tree |> stree.to_string)
     [Print(str), ..rest] -> flush_inner(rest, tree |> append(str))
     [PrintReset(str), ..rest] ->
-      flush_inner(rest, tree |> append(str) |> append(esc <> "[0m"))
+      flush_inner(rest, tree |> append(str) |> append(csi <> "0m"))
     [Println(str), ..rest] ->
       flush_inner(rest, tree |> append(str) |> append(move_to_next_line(1)))
     [PrintlnReset(str), ..rest] ->
@@ -51,7 +51,7 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
         rest,
         tree
           |> append(str)
-          |> append(move_to_next_line(1) <> esc <> "[0m"),
+          |> append(move_to_next_line(1) <> csi <> "0m"),
       )
 
     // Cursor
@@ -119,5 +119,5 @@ pub fn execute(commands: List(Command)) {
 }
 
 pub fn println(s: String) {
-  io.print(esc <> "[1E" <> s)
+  io.print(csi <> "1E" <> s)
 }

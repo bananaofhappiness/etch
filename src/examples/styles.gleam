@@ -1,18 +1,11 @@
 import command.{
-  Clear, DisableLineWrap, EnableLineWrap, EnterAlternateScreen, EnterRaw,
-  HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo,
-  MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print,
-  PrintReset, Println, PrintlnReset, ResetColors, SavePosition, ScrollDown,
-  ScrollUp, SetCursorStyle, SetSize, SetTitle, ShowCursor,
+  Clear, LeaveAlternateScreen, MoveTo, MoveToNextLine, Print, PrintReset,
+  Println, PrintlnReset, ResetColors,
 }
-import cursor
-import esc.{esc}
-import event.{init_event_loop}
-import gleam/erlang/process.{type Subject}
-import gleam/io.{print}
+
 import gleam/list
-import gleam/string.{utf_codepoint}
-import stdout.{Queue, execute, flush, println, queue}
+import gleam/string
+import stdout.{Queue, execute, flush, queue}
 import style.{
   blinking, bold, dim, inverse, italic, on, reset_colors, underline, with,
   with_on,
@@ -29,11 +22,11 @@ pub fn main() {
     |> queue([
       Clear(terminal.All),
       MoveTo(0, 0),
-      // command.EnableLineWrap,
+      command.EnableLineWrap,
     ])
 
   let x =
-    "Initialized! This one is dim, italic, blinking, underlined with inversed colors!"
+    "Hi! This one is dim, italic, blinking, underlined with inversed colors! (your terminal may not support some modifiers)."
     |> dim
     |> italic
     |> blinking
@@ -49,7 +42,7 @@ pub fn main() {
     |> bold
     |> italic
     |> on(style.AnsiValue(44))
-    <> "As you can see, we can easily apply different styles"
+    <> "As you can see, we can easily apply different styles."
     |> dim
     |> inverse
     |> underline
@@ -69,9 +62,9 @@ pub fn main() {
     |> string.to_graphemes
     |> list.index_map(make_rainbow)
     |> string.join("")
-  // |> on(style.AnsiValue(239))
 
-  let a = "And now the colors are reset"
+  let a =
+    "And now the colors are reset after we call `command.ResetColors`. Try commenting it and this text will turn red, because we never reset the color after using `make_rainbow`."
 
   let q =
     q
@@ -82,13 +75,13 @@ pub fn main() {
       Println(z),
       ResetColors,
       Print(a),
-      MoveToNextLine(1),
+      MoveToNextLine(2),
     ])
   flush(q)
 
   execute([
     PrintReset(
-      "We can use ANSI color values. This one is DarkSlateGray3 with HotPink3 background"
+      "We can use ANSI color values. This one is DarkSlateGray3 with HotPink3 background."
       |> with_on(style.AnsiValue(116), style.AnsiValue(168)),
     ),
     MoveToNextLine(1),
@@ -96,40 +89,6 @@ pub fn main() {
       "And the colors are reset again, because `with_on` guarantees that colors are reset after applying them.",
     ),
   ])
-}
-
-fn loop(event_rx: Subject(String)) {
-  process.sleep(8)
-  handle_input(event_rx)
-  loop(event_rx)
-}
-
-fn handle_input(rx: Subject(String)) {
-  let assert Ok(etx) = utf_codepoint(3)
-  let etx = string.from_utf_codepoints([etx])
-  // let assert Ok(bs) = utf_codepoint(8)
-  // let bs = string.from_utf_codepoints([bs])
-  let up = esc <> "[1A"
-  case process.receive(rx, 1) {
-    Ok("q") -> exit()
-    Ok("w") -> execute([EnableLineWrap])
-    Ok("f") -> execute([DisableLineWrap])
-    Ok("\r") -> println("")
-    Ok(s) if s == up -> println("up")
-    // Ok(s) if s == bs -> execute([MoveLeft(1)])
-    // Ok("b") ->
-    //   execute([
-    //     SetCursorStyle(cursor.BlinkingBlock),
-    //   ])
-    // Ok("s") ->
-    //   execute([
-    //     SetCursorStyle(cursor.SteadyBlock),
-    //   ])
-    Ok("x") -> print(cursor.restore_position())
-    Ok(s) if s == etx -> exit()
-    Ok(s) -> print(s)
-    Error(_) -> Nil
-  }
 }
 
 pub fn exit() {

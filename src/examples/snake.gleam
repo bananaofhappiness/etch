@@ -3,7 +3,6 @@ import event.{type Event, Key}
 import gleam/dict.{type Dict}
 import gleam/erlang/process
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/string
 import gleam/string_tree as stree
@@ -76,7 +75,7 @@ fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
 
 fn loop(state: State, rx: process.Subject(Event)) {
   process.sleep(200)
-  // let state = handle_input(state, rx)
+  let state = handle_input(state, rx)
   let state = update_state(state)
   draw(state)
   loop(state, rx)

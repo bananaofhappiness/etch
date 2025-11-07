@@ -1,8 +1,6 @@
-import esc.{esc}
+import esc.{csi}
 import gleam/erlang/process.{type Subject}
 import gleam/int
-import gleam/io
-import gleam/list
 import gleam/result
 import gleam/string
 
@@ -44,17 +42,19 @@ pub type Event {
   Key(String)
   Mouse(MouseEvent)
   Resize(Int, Int)
+  Exit
 }
 
 @external(erlang, "io", "get_chars")
 fn get_chars(chars: String, n: Int) -> String
 
+@external(erlang, "terminal_ffi", "enable_os_signals")
+fn enable_os_signals(rx: Subject(Event)) -> Nil
+
 pub fn init_event_loop() -> Subject(Event) {
   let subject = process.new_subject()
   process.spawn(fn() { input_loop(subject) })
-  // let assert Ok(actor) =
-  //   actor.new([]) |> actor.named(process.new_name("Event")) |> actor.start
-  // let subject = actor.data
+  enable_os_signals(subject)
   subject
 }
 
@@ -69,29 +69,29 @@ fn input_loop(subj: Subject(Event)) {
 }
 
 pub fn enable_mouse_capture() {
-  esc
-  <> "[?1000h"
-  <> esc
-  <> "[?1002h"
-  <> esc
-  <> "[?1003h"
-  <> esc
-  <> "[?1015h"
-  <> esc
-  <> "[?1006h"
+  csi
+  <> "?1000h"
+  <> csi
+  <> "?1002h"
+  <> csi
+  <> "?1003h"
+  <> csi
+  <> "?1015h"
+  <> csi
+  <> "?1006h"
 }
 
 pub fn disable_mouse_capture() {
-  esc
-  <> "[?1000l"
-  <> esc
-  <> "[?1002l"
-  <> esc
-  <> "[?1003l"
-  <> esc
-  <> "[?1015l"
-  <> esc
-  <> "[?1006l"
+  csi
+  <> "?1000l"
+  <> csi
+  <> "?1002l"
+  <> csi
+  <> "?1003l"
+  <> csi
+  <> "?1015l"
+  <> csi
+  <> "?1006l"
 }
 
 fn parse_mouse_capture(s: String) -> Event {
@@ -153,9 +153,9 @@ fn parse_modifiers(code: Int) -> Modifiers {
 }
 
 pub fn enable_focus_change() {
-  esc <> "[?1004h"
+  csi <> "?1004h"
 }
 
 pub fn disable_focus_change() {
-  esc <> "[?1004l"
+  csi <> "?1004l"
 }

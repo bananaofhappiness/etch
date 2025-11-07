@@ -1,4 +1,4 @@
-import esc.{esc}
+import esc.{csi, esc}
 import gleam/int
 
 pub type ClearType {
@@ -18,12 +18,12 @@ pub fn window_size() -> #(Int, Int)
 
 pub fn clear(t: ClearType) -> String {
   case t {
-    All -> esc <> "[2J"
-    Purge -> esc <> "[3J"
-    FromCursorDown -> esc <> "[J"
-    FromCursorUp -> esc <> "[1J"
-    CurrentLine -> esc <> "[2K"
-    UntilNewLine -> esc <> "[K"
+    All -> csi <> "2J"
+    Purge -> csi <> "3J"
+    FromCursorDown -> csi <> "J"
+    FromCursorUp -> csi <> "1J"
+    CurrentLine -> csi <> "2K"
+    UntilNewLine -> csi <> "K"
   }
 }
 
@@ -32,29 +32,29 @@ pub fn set_title(s: String) -> String {
 }
 
 pub fn disable_line_wrap() -> String {
-  esc <> "[?7l"
+  csi <> "?7l"
 }
 
 pub fn enable_line_wrap() -> String {
-  esc <> "[?7h"
+  csi <> "?7h"
 }
 
 pub fn scroll_up(n: Int) -> String {
-  esc <> "[" <> int.to_string(n) <> "S"
+  csi <> int.to_string(n) <> "S"
 }
 
 pub fn scroll_down(n: Int) -> String {
-  esc <> "[" <> int.to_string(n) <> "T"
+  csi <> int.to_string(n) <> "T"
 }
 
 pub fn enter_alternative() -> String {
-  esc <> "[?1049h"
+  csi <> "?1049h"
 }
 
 pub fn leave_alternative() -> String {
-  esc <> "[?1049l"
+  csi <> "?1049l"
 }
 
 pub fn set_size(x: Int, y: Int) -> String {
-  esc <> "[8;" <> int.to_string(x) <> ";" <> int.to_string(y) <> "t"
+  csi <> "8;" <> int.to_string(x) <> ";" <> int.to_string(y) <> "t"
 }
