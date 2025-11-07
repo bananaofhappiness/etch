@@ -1,5 +1,5 @@
 import command
-import event.{type Event, Exit, Key, Mouse, Resize, init_event_loop}
+import event.{type Event, Key, Mouse, Resize, init_event_loop}
 import gleam/erlang/process.{type Subject}
 import gleam/int
 import stdout
@@ -7,10 +7,10 @@ import terminal
 
 pub fn main() {
   stdout.execute([
+    command.EnterRaw,
     command.Clear(terminal.All),
     command.EnableMouseCapture,
     command.HideCursor,
-    command.EnterRaw,
   ])
   let rx = init_event_loop()
   loop(rx)
@@ -19,7 +19,6 @@ pub fn main() {
 fn loop(rx: Subject(Event)) -> a {
   process.sleep(16)
   handle_input(rx)
-  // receive_sigwinch()
   loop(rx)
 }
 
@@ -27,9 +26,8 @@ fn handle_input(rx: Subject(Event)) {
   case process.receive(rx, 1) {
     Ok(Key(s)) ->
       stdout.execute([
-        command.EnterAlternateScreen,
-        command.Clear(terminal.All),
         command.MoveTo(0, 0),
+        command.Clear(terminal.FromCursorDown),
         command.Print("Got key event: \"" <> s <> "\""),
       ])
     Ok(Mouse(m)) -> {
@@ -38,8 +36,8 @@ fn handle_input(rx: Subject(Event)) {
       let column = m.column
       let modifiers = m.modifiers
       stdout.execute([
-        command.Clear(terminal.All),
         command.MoveTo(0, 0),
+        command.Clear(terminal.FromCursorDown),
         command.Println("Got mouse event"),
         command.Println("Kind: " <> kind_to_string(kind)),
         command.Println("Row: " <> int.to_string(row)),
@@ -49,16 +47,12 @@ fn handle_input(rx: Subject(Event)) {
     }
     Ok(Resize(c, r)) -> {
       stdout.execute([
-        command.Clear(terminal.All),
         command.MoveTo(0, 0),
+        command.Clear(terminal.FromCursorDown),
         command.Println("Window resized. Current size: "),
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
       ])
-    }
-    Ok(Exit) -> {
-      // stdout.execute([command.LeaveAlternateScreen])
-      Nil
     }
     Ok(_) -> Nil
     Error(_) -> Nil

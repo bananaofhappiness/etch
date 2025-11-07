@@ -4,7 +4,6 @@
 
 -behaviour(gen_event).
 
-%% (для forwarder — внутренний gen_event handler)
 -export([init/1, handle_event/2, handle_info/2, handle_call/2, terminate/2,
          code_change/3]).
 
@@ -26,7 +25,7 @@ window_size() ->
 
 enable_os_signals(Subject) ->
     ok = os:set_signal(sigwinch, handle),
-    % ok = os:set_signal(sigint, handle),
+    ok = os:set_signal(sigterm, handle),
     gen_event:add_handler(erl_signal_server, ?MODULE, Subject).
 
 %% === gen_event callbacks ===
@@ -34,20 +33,10 @@ init(Subject) ->
     {ok, Subject}.
 
 handle_event(sigwinch, Subject) ->
-    % %% Subject должен быть {subject, Pid, Ref}
-    % case Subject of
-    %     {subject, Pid, Ref} when is_pid(Pid) ->
-    %         io:format("Subject = ~p~n", [Subject]),
-    %         %% TODO: подставь здесь реальные cols/rows (см. ниже)
     {Cols, Rows} = window_size(),
     gleam@erlang@process:send(Subject, {resize, Cols, Rows}),
     {ok, Subject};
-handle_event(sigint, Subject) ->
-    % %% Subject должен быть {subject, Pid, Ref}
-    % case Subject of
-    %     {subject, Pid, Ref} when is_pid(Pid) ->
-    %         io:format("Subject = ~p~n", [Subject]),
-    %         %% TODO: подставь здесь реальные cols/rows (см. ниже)
+handle_event(sigterm, Subject) ->
     gleam@erlang@process:send(Subject, {exit}),
     {ok, Subject};
 handle_event(_, S) ->

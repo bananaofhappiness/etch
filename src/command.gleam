@@ -1,4 +1,5 @@
 import cursor.{type CursorStyle}
+import event.{type KeyboardEnhancementFlag}
 import style.{type Attribute, type Color}
 import terminal.{type ClearType}
 
@@ -36,8 +37,12 @@ pub type Command {
   EnterRaw
   EnterAlternateScreen
   LeaveAlternateScreen
+
+  // Event
   EnableMouseCapture
   DisableMouseCapture
+  PushKeyboardEnhancementFlags(List(KeyboardEnhancementFlag))
+  PopKeyboardEnhancementFlags
 
   // Style
   SetForegroundColor(c: Color)

@@ -4,6 +4,14 @@ import gleam/int
 import gleam/result
 import gleam/string
 
+pub type KeyboardEnhancementFlag {
+  DisambiguateEscapeCode
+  ReportEventTypes
+  ReportAlternateKeys
+  ReportAllKeysAsEscapeCod
+  // ReportAssociatedText
+}
+
 pub type MouseButton {
   Left
   Right
@@ -13,8 +21,8 @@ pub type MouseButton {
 pub type Modifiers {
   Modifiers(
     shift: Bool,
-    control: Bool,
     alt: Bool,
+    control: Bool,
     super: Bool,
     hyper: Bool,
     meta: Bool,
@@ -42,7 +50,6 @@ pub type Event {
   Key(String)
   Mouse(MouseEvent)
   Resize(Int, Int)
-  Exit
 }
 
 @external(erlang, "io", "get_chars")
@@ -141,8 +148,8 @@ fn parse_modifiers(code: Int) -> Modifiers {
   // TODO: DISAMBIGUATE_ESCAPE_CODES
   Modifiers(
     shift: int.bitwise_and(code, 4) != 0,
-    control: int.bitwise_and(code, 8) != 0,
-    alt: int.bitwise_and(code, 16) != 0,
+    alt: int.bitwise_and(code, 8) != 0,
+    control: int.bitwise_and(code, 16) != 0,
     super: False,
     hyper: False,
     meta: False,
@@ -158,4 +165,29 @@ pub fn enable_focus_change() {
 
 pub fn disable_focus_change() {
   csi <> "?1004l"
+}
+
+pub fn push_keyboard_enhancement_flags(flags: List(KeyboardEnhancementFlag)) {
+  push_keyboard_enhancement_flags_inner(flags, 0)
+}
+
+pub fn push_keyboard_enhancement_flags_inner(
+  flags: List(KeyboardEnhancementFlag),
+  acc: Int,
+) {
+  case flags {
+    [DisambiguateEscapeCode, ..rest] ->
+      push_keyboard_enhancement_flags_inner(rest, acc + 1)
+    [ReportEventTypes, ..rest] ->
+      push_keyboard_enhancement_flags_inner(rest, acc + 2)
+    [ReportAlternateKeys, ..rest] ->
+      push_keyboard_enhancement_flags_inner(rest, acc + 4)
+    [ReportAllKeysAsEscapeCod, ..rest] ->
+      push_keyboard_enhancement_flags_inner(rest, acc + 8)
+    [] -> csi <> ">" <> int.to_string(acc) <> "u"
+  }
+}
+
+pub fn pop_keyboard_enhancement_flags() {
+  csi <> "<1u"
 }

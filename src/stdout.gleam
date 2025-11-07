@@ -2,8 +2,9 @@ import command.{
   type Command, Clear, DisableLineWrap, DisableMouseCapture, EnableLineWrap,
   EnableMouseCapture, EnterAlternateScreen, EnterRaw, HideCursor,
   LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn,
-  MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp, Print, PrintReset,
-  Println, PrintlnReset, ResetAttributes, ResetColors, RestorePosition,
+  MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
+  PopKeyboardEnhancementFlags, Print, PrintReset, Println, PrintlnReset,
+  PushKeyboardEnhancementFlags, ResetAttributes, ResetColors, RestorePosition,
   SavePosition, ScrollDown, ScrollUp, SetAttributes, SetBackgroundColor,
   SetCursorStyle, SetForegroundAndBackgroundColors, SetForegroundColor, SetSize,
   SetTitle, ShowCursor,
@@ -14,7 +15,10 @@ import cursor.{
   restore_position, save_position, set_cursor_style, show,
 }
 import esc.{csi}
-import event.{disable_mouse_capture, enable_mouse_capture}
+import event.{
+  disable_mouse_capture, enable_mouse_capture, pop_keyboard_enhancement_flags,
+  push_keyboard_enhancement_flags,
+}
 import gleam/io
 import gleam/list
 import gleam/string_tree.{type StringTree, append} as stree
@@ -93,11 +97,21 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, tree |> append(enter_alternative()))
     [LeaveAlternateScreen, ..rest] ->
       flush_inner(rest, tree |> append(leave_alternative()))
+
+    // event
     [EnableMouseCapture, ..rest] ->
       flush_inner(rest, tree |> append(enable_mouse_capture()))
     [DisableMouseCapture, ..rest] ->
       flush_inner(rest, tree |> append(disable_mouse_capture()))
 
+    // TODO: KeyboardEnhancementFlags
+    [PushKeyboardEnhancementFlags(_), ..rest] -> flush_inner(rest, tree)
+    [PopKeyboardEnhancementFlags, ..rest] -> flush_inner(rest, tree)
+
+    // [PushKeyboardEnhancementFlags(f), ..rest] ->
+    //   flush_inner(rest, tree |> append(push_keyboard_enhancement_flags(f)))
+    // [PopKeyboardEnhancementFlags, ..rest] ->
+    //   flush_inner(rest, tree |> append(pop_keyboard_enhancement_flags()))
     // style
     [SetForegroundColor(c), ..rest] ->
       flush_inner(rest, tree |> append(with("", c)))

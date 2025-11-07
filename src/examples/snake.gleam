@@ -316,13 +316,13 @@ fn print_centered_colored_block(
 fn lose(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Lose", style.Red))
   process.sleep(2000)
-  stdout.execute([command.Clear(terminal.All)])
+  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
   halt(1)
 }
 
 fn win(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Win", style.Green))
   process.sleep(2000)
-  stdout.execute([command.Clear(terminal.All)])
+  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
   halt(0)
 }
