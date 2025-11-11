@@ -1,6 +1,7 @@
 import esc.{csi}
-import gleam/erlang/process.{type Subject}
+import gleam/erlang/process
 import gleam/int
+import gleam/option.{type Option}
 import gleam/result
 import gleam/string
 
@@ -55,24 +56,31 @@ pub type Event {
 @external(erlang, "io", "get_chars")
 fn get_chars(chars: String, n: Int) -> String
 
-@external(erlang, "terminal_ffi", "enable_os_signals")
-fn enable_os_signals(rx: Subject(Event)) -> Nil
+@external(erlang, "event_ffi", "start_link")
+fn start_link() -> Nil
 
-pub fn init_event_loop() -> Subject(Event) {
-  let subject = process.new_subject()
-  process.spawn(fn() { input_loop(subject) })
-  enable_os_signals(subject)
-  subject
+@external(erlang, "event_ffi", "push")
+fn push(event: Event) -> Nil
+
+@external(erlang, "event_ffi", "poll")
+pub fn poll(timeout: Int) -> Option(Event)
+
+@external(erlang, "event_ffi", "read")
+pub fn read() -> Option(Event)
+
+pub fn init_event_server() {
+  start_link()
+  process.spawn(fn() { input_loop() })
 }
 
-fn input_loop(subj: Subject(Event)) {
+fn input_loop() {
   let char = get_chars("", 1024)
   let event = case char {
     "\u{001b}[<" <> s -> parse_mouse_capture(s)
     s -> Key(s)
   }
-  process.send(subj, event)
-  input_loop(subj)
+  push(event)
+  input_loop()
 }
 
 pub fn enable_mouse_capture() {

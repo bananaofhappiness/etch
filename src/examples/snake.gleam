@@ -1,9 +1,10 @@
 import command
-import event.{type Event, Key}
+import event.{Key}
 import gleam/dict.{type Dict}
 import gleam/erlang/process
 import gleam/int
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/string
 import gleam/string_tree as stree
 import stdout
@@ -38,7 +39,6 @@ pub fn main() {
     command.Clear(terminal.All),
     command.HideCursor,
     command.DisableLineWrap,
-    command.EnableMouseCapture,
   ])
 
   let #(columns, rows) = terminal.window_size()
@@ -58,8 +58,8 @@ pub fn main() {
       0,
     )
   let state = spawn_fruit(state)
-  let rx = event.init_event_loop()
-  loop(state, rx)
+  event.init_event_server()
+  loop(state)
 }
 
 fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
@@ -73,12 +73,12 @@ fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   }
 }
 
-fn loop(state: State, rx: process.Subject(Event)) {
+fn loop(state: State) {
   process.sleep(200)
-  let state = handle_input(state, rx)
+  let state = handle_input(state)
   let state = update_state(state)
   draw(state)
-  loop(state, rx)
+  loop(state)
 }
 
 fn update_state(state: State) -> State {
@@ -102,18 +102,18 @@ fn spawn_fruit(state: State) -> State {
   }
 }
 
-fn handle_input(state: State, rx: process.Subject(Event)) -> State {
-  case process.receive(rx, 1), state.direction {
-    Ok(Key("w")), Down -> state
-    Ok(Key("w")), _ -> State(..state, direction: Up)
-    Ok(Key("a")), Right -> state
-    Ok(Key("a")), _ -> State(..state, direction: Left)
-    Ok(Key("s")), Up -> state
-    Ok(Key("s")), _ -> State(..state, direction: Down)
-    Ok(Key("d")), Left -> state
-    Ok(Key("d")), _ -> State(..state, direction: Right)
-    Ok(_), _ -> state
-    Error(_), _ -> state
+fn handle_input(state: State) -> State {
+  case event.poll(1), state.direction {
+    Some(Key("w")), Down -> state
+    Some(Key("w")), _ -> State(..state, direction: Up)
+    Some(Key("a")), Right -> state
+    Some(Key("a")), _ -> State(..state, direction: Left)
+    Some(Key("s")), Up -> state
+    Some(Key("s")), _ -> State(..state, direction: Down)
+    Some(Key("d")), Left -> state
+    Some(Key("d")), _ -> State(..state, direction: Right)
+    Some(_), _ -> state
+    None, _ -> state
   }
 }
 

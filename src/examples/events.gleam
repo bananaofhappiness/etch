@@ -1,7 +1,7 @@
 import command
-import event.{type Event, Key, Mouse, Resize, init_event_loop}
-import gleam/erlang/process.{type Subject}
+import event.{Key, Mouse, Resize, init_event_server}
 import gleam/int
+import gleam/option.{None, Some}
 import stdout
 import terminal
 
@@ -12,25 +12,25 @@ pub fn main() {
     command.EnableMouseCapture,
     command.HideCursor,
   ])
-  let rx = init_event_loop()
-  loop(rx)
+  init_event_server()
+  loop()
 }
 
-fn loop(rx: Subject(Event)) -> a {
-  process.sleep(16)
-  handle_input(rx)
-  loop(rx)
+fn loop() -> a {
+  // process.sleep(16)
+  handle_input()
+  loop()
 }
 
-fn handle_input(rx: Subject(Event)) {
-  case process.receive(rx, 1) {
-    Ok(Key(s)) ->
+fn handle_input() {
+  case event.read() {
+    Some(Key(s)) ->
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Print("Got key event: \"" <> s <> "\""),
       ])
-    Ok(Mouse(m)) -> {
+    Some(Mouse(m)) -> {
       let kind = m.kind
       let row = m.row
       let column = m.column
@@ -45,7 +45,7 @@ fn handle_input(rx: Subject(Event)) {
         command.Println("Modifiers: " <> modifiers_to_string(modifiers)),
       ])
     }
-    Ok(Resize(c, r)) -> {
+    Some(Resize(c, r)) -> {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
@@ -54,8 +54,11 @@ fn handle_input(rx: Subject(Event)) {
         command.Println("Rows: " <> int.to_string(r)),
       ])
     }
-    Ok(_) -> Nil
-    Error(_) -> Nil
+    Some(ev) -> {
+      echo ev
+      Nil
+    }
+    None -> Nil
   }
 }
 
