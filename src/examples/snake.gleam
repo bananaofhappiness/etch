@@ -32,7 +32,7 @@ type State {
   )
 }
 
-pub fn main() {
+fn main() {
   stdout.execute([
     command.EnterRaw,
     command.EnterAlternateScreen,

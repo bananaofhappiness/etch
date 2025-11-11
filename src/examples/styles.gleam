@@ -15,7 +15,7 @@ import terminal
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
 
-pub fn main() {
+fn main() {
   let q = Queue([])
   let q =
     q
@@ -34,7 +34,7 @@ pub fn main() {
     |> underline
 
   let y =
-    "This one is magenta "
+    "`command.PrintlnReset()` resets our color. Now we can use different styles. This one is magenta "
     |> bold
     |> italic
     |> with(style.Magenta)

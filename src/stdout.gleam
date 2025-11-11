@@ -105,13 +105,13 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, tree |> append(disable_mouse_capture()))
 
     // TODO: KeyboardEnhancementFlags
-    [PushKeyboardEnhancementFlags(_), ..rest] -> flush_inner(rest, tree)
-    [PopKeyboardEnhancementFlags, ..rest] -> flush_inner(rest, tree)
+    // [PushKeyboardEnhancementFlags(_), ..rest] -> flush_inner(rest, tree)
+    // [PopKeyboardEnhancementFlags, ..rest] -> flush_inner(rest, tree)
+    [PushKeyboardEnhancementFlags(f), ..rest] ->
+      flush_inner(rest, tree |> append(push_keyboard_enhancement_flags(f)))
+    [PopKeyboardEnhancementFlags, ..rest] ->
+      flush_inner(rest, tree |> append(pop_keyboard_enhancement_flags()))
 
-    // [PushKeyboardEnhancementFlags(f), ..rest] ->
-    //   flush_inner(rest, tree |> append(push_keyboard_enhancement_flags(f)))
-    // [PopKeyboardEnhancementFlags, ..rest] ->
-    //   flush_inner(rest, tree |> append(pop_keyboard_enhancement_flags()))
     // style
     [SetForegroundColor(c), ..rest] ->
       flush_inner(rest, tree |> append(with("", c)))

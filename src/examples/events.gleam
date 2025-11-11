@@ -5,7 +5,7 @@ import gleam/option.{None, Some}
 import stdout
 import terminal
 
-pub fn main() {
+fn main() {
   stdout.execute([
     command.EnterRaw,
     command.Clear(terminal.All),

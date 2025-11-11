@@ -29,7 +29,7 @@ import stdout.{execute}
 import style
 import terminal.{window_size}
 
-pub fn main() {
+fn main() {
   execute([command.HideCursor])
   let #(x, y) = window_size()
   draw_centered_text(x, y)
