@@ -1,16 +1,25 @@
 import command
-import event.{Key, Mouse, Resize, init_event_server}
+import esc.{csi}
+import event.{FocusGained, FocusLost, Key, Mouse, Resize, init_event_server}
 import gleam/int
+import gleam/io
 import gleam/option.{None, Some}
 import stdout
 import terminal
 
-fn main() {
+pub fn main() {
   stdout.execute([
+    command.PushKeyboardEnhancementFlags([
+      event.DisambiguateEscapeCode,
+      event.ReportAlternateKeys,
+      event.ReportEventTypes,
+      event.ReportAllKeysAsEscapeCode,
+    ]),
     command.EnterRaw,
     command.Clear(terminal.All),
     command.EnableMouseCapture,
     command.HideCursor,
+    command.EnableFocusChange,
   ])
   init_event_server()
   loop()
@@ -23,13 +32,14 @@ fn loop() -> a {
 }
 
 fn handle_input() {
-  case event.read() {
-    Some(Key(s)) ->
+  case event.poll(1) {
+    Some(Key(s)) -> {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Print("Got key event: \"" <> s <> "\""),
       ])
+    }
     Some(Mouse(m)) -> {
       let kind = m.kind
       let row = m.row
@@ -45,7 +55,7 @@ fn handle_input() {
         command.Println("Modifiers: " <> modifiers_to_string(modifiers)),
       ])
     }
-    Some(Resize(c, r)) -> {
+    Some(Resize(c, r)) ->
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
@@ -53,11 +63,18 @@ fn handle_input() {
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
       ])
-    }
-    Some(ev) -> {
-      echo ev
-      Nil
-    }
+    Some(FocusGained) ->
+      stdout.execute([
+        command.MoveTo(0, 0),
+        command.Clear(terminal.FromCursorDown),
+        command.Println("Focus gained."),
+      ])
+    Some(FocusLost) ->
+      stdout.execute([
+        command.MoveTo(0, 0),
+        command.Clear(terminal.FromCursorDown),
+        command.Println("Focus lost."),
+      ])
     None -> Nil
   }
 }

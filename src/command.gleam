@@ -43,6 +43,8 @@ pub type Command {
   DisableMouseCapture
   PushKeyboardEnhancementFlags(List(KeyboardEnhancementFlag))
   PopKeyboardEnhancementFlags
+  EnableFocusChange
+  DisableFocusChange
 
   // Style
   SetForegroundColor(c: Color)

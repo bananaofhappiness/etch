@@ -1,6 +1,5 @@
 import esc.{csi}
 import gleam/int
-import gleam/list
 
 pub type Color {
   Reset
@@ -131,20 +130,35 @@ pub fn with_on(s: String, fg: Color, bg: Color) -> String {
 }
 
 pub fn attributes(s: String, a: List(Attribute)) -> String {
-  csi <> get_attributes(a) <> "m" <> s
+  get_attributes(a, "") <> s
 }
 
-fn get_attributes(a: List(Attribute)) -> String {
-  list.fold(a, "", fn(s, a) {
-    case a {
-      Bold -> s <> "1;"
-      Dim -> s <> "2;"
-      Italic -> s <> "3;"
-      Underline -> s <> "4;"
-      Blinking -> s <> "5;"
-      Inverse -> s <> "7;"
+fn get_attributes(a: List(Attribute), acc: String) -> String {
+  case a {
+    [] -> ""
+    [attr] ->
+      case attr {
+        Bold -> csi <> acc <> "1m"
+        Dim -> csi <> acc <> "2m"
+        Italic -> csi <> acc <> "3m"
+        Underline -> csi <> acc <> "4m"
+        Blinking -> csi <> acc <> "5m"
+        Inverse -> csi <> acc <> "7m"
+      }
+    [attr, ..rest] -> {
+      let acc =
+        case attr {
+          Bold -> acc <> "1"
+          Dim -> acc <> "2"
+          Italic -> acc <> "3"
+          Underline -> acc <> "4"
+          Blinking -> acc <> "5"
+          Inverse -> acc <> "7"
+        }
+        <> ";"
+      get_attributes(rest, acc)
     }
-  })
+  }
 }
 
 pub fn bold(s: String) -> String {

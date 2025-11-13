@@ -1,6 +1,7 @@
 import esc.{csi}
 import gleam/erlang/process
 import gleam/int
+import gleam/io
 import gleam/option.{type Option}
 import gleam/result
 import gleam/string
@@ -9,7 +10,7 @@ pub type KeyboardEnhancementFlag {
   DisambiguateEscapeCode
   ReportEventTypes
   ReportAlternateKeys
-  ReportAllKeysAsEscapeCod
+  ReportAllKeysAsEscapeCode
   // ReportAssociatedText
 }
 
@@ -76,11 +77,26 @@ pub fn init_event_server() {
 fn input_loop() {
   let char = get_chars("", 1024)
   let event = case char {
-    "\u{001b}[<" <> s -> parse_mouse_capture(s)
+    "\u{001b}[" <> s -> {
+      handle_escape_code(s)
+    }
+    // "\u{001b}[O" -> FocusLost
+    // "\u{001b}[I" -> FocusGained
+    // "\u{001b}[<" <> s -> parse_mouse_capture(s)
     s -> Key(s)
   }
   push(event)
   input_loop()
+}
+
+fn handle_escape_code(s: String) -> Event {
+  case s {
+    s -> Key(s)
+    "O" -> FocusLost
+    "I" -> FocusGained
+    "<" <> s -> parse_mouse_capture(s)
+    _ -> todo
+  }
 }
 
 pub fn enable_mouse_capture() {
@@ -179,7 +195,7 @@ pub fn push_keyboard_enhancement_flags(flags: List(KeyboardEnhancementFlag)) {
   push_keyboard_enhancement_flags_inner(flags, 0)
 }
 
-pub fn push_keyboard_enhancement_flags_inner(
+fn push_keyboard_enhancement_flags_inner(
   flags: List(KeyboardEnhancementFlag),
   acc: Int,
 ) {
@@ -190,9 +206,11 @@ pub fn push_keyboard_enhancement_flags_inner(
       push_keyboard_enhancement_flags_inner(rest, acc + 2)
     [ReportAlternateKeys, ..rest] ->
       push_keyboard_enhancement_flags_inner(rest, acc + 4)
-    [ReportAllKeysAsEscapeCod, ..rest] ->
+    [ReportAllKeysAsEscapeCode, ..rest] ->
       push_keyboard_enhancement_flags_inner(rest, acc + 8)
-    [] -> csi <> ">" <> int.to_string(acc) <> "u"
+    [] -> {
+      echo csi <> ">" <> int.to_string(acc) <> "u"
+    }
   }
 }
 

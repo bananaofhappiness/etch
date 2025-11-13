@@ -1,26 +1,3 @@
-//// This example prints a rainbow with "Hello from Etch!" text in the middle of the terminal.
-//// If terminal color changes, it automatically adjusts.
-//// Resize event is used here, but you can go with the approach below without event handling.
-//// ```gleam
-//// fn main() {
-////  execute([command.HideCursor])
-////  let #(x, y) = window_size()
-////  draw_centered_text(x, y)
-////  loop(x, y)
-//// }
-////
-//// fn loop(prev_x: Int, prev_y: Int) {
-////  let #(x, y) = window_size()
-////  case x != prev_x || y != prev_y {
-////    True -> {
-////      draw_centered_text(x, y)
-////      loop(x, y)
-////    }
-////    False -> loop(x, y)
-////  }
-//// }
-//// ```
-
 import command
 import event
 import gleam/option.{None, Some}

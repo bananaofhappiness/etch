@@ -1,8 +1,8 @@
 import command.{
-  type Command, Clear, DisableLineWrap, DisableMouseCapture, EnableLineWrap,
-  EnableMouseCapture, EnterAlternateScreen, EnterRaw, HideCursor,
-  LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn,
-  MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
+  type Command, Clear, DisableFocusChange, DisableLineWrap, DisableMouseCapture,
+  EnableFocusChange, EnableLineWrap, EnableMouseCapture, EnterAlternateScreen,
+  EnterRaw, HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight,
+  MoveTo, MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
   PopKeyboardEnhancementFlags, Print, PrintReset, Println, PrintlnReset,
   PushKeyboardEnhancementFlags, ResetAttributes, ResetColors, RestorePosition,
   SavePosition, ScrollDown, ScrollUp, SetAttributes, SetBackgroundColor,
@@ -16,7 +16,8 @@ import cursor.{
 }
 import esc.{csi}
 import event.{
-  disable_mouse_capture, enable_mouse_capture, pop_keyboard_enhancement_flags,
+  disable_focus_change, disable_mouse_capture, enable_focus_change,
+  enable_mouse_capture, pop_keyboard_enhancement_flags,
   push_keyboard_enhancement_flags,
 }
 import gleam/io
@@ -59,71 +60,75 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       )
 
     // Cursor
-    [MoveUp(n), ..rest] -> flush_inner(rest, tree |> append(move_up(n)))
-    [MoveDown(n), ..rest] -> flush_inner(rest, tree |> append(move_down(n)))
-    [MoveLeft(n), ..rest] -> flush_inner(rest, tree |> append(move_left(n)))
-    [MoveRight(n), ..rest] -> flush_inner(rest, tree |> append(move_right(n)))
+    [MoveUp(n), ..rest] -> flush_inner(rest, append(tree, move_up(n)))
+    [MoveDown(n), ..rest] -> flush_inner(rest, append(tree, move_down(n)))
+    [MoveLeft(n), ..rest] -> flush_inner(rest, append(tree, move_left(n)))
+    [MoveRight(n), ..rest] -> flush_inner(rest, append(tree, move_right(n)))
     [MoveToNextLine(n), ..rest] ->
       flush_inner(rest, tree |> append(move_to_next_line(n)))
     [MoveToPreviousLine(n), ..rest] ->
       flush_inner(rest, tree |> append(move_to_previous_line(n)))
     [MoveToColumn(n), ..rest] ->
       flush_inner(rest, tree |> append(move_to_column(n)))
-    [MoveToRow(n), ..rest] -> flush_inner(rest, tree |> append(move_to_row(n)))
-    [MoveTo(x, y), ..rest] -> flush_inner(rest, tree |> append(move_to(x, y)))
-    [SavePosition, ..rest] -> flush_inner(rest, tree |> append(save_position()))
+    [MoveToRow(n), ..rest] -> flush_inner(rest, append(tree, move_to_row(n)))
+    [MoveTo(x, y), ..rest] -> flush_inner(rest, append(tree, move_to(x, y)))
+    [SavePosition, ..rest] -> flush_inner(rest, append(tree, save_position()))
     [RestorePosition, ..rest] ->
       flush_inner(rest, tree |> append(restore_position()))
-    [ShowCursor, ..rest] -> flush_inner(rest, tree |> append(show()))
-    [HideCursor, ..rest] -> flush_inner(rest, tree |> append(hide()))
+    [ShowCursor, ..rest] -> flush_inner(rest, append(tree, show()))
+    [HideCursor, ..rest] -> flush_inner(rest, append(tree, hide()))
     [SetCursorStyle(s), ..rest] ->
-      flush_inner(rest, tree |> append(set_cursor_style(s)))
+      flush_inner(rest, append(tree, set_cursor_style(s)))
 
     // terminal
-    [ScrollDown(n), ..rest] -> flush_inner(rest, tree |> append(scroll_down(n)))
-    [ScrollUp(n), ..rest] -> flush_inner(rest, tree |> append(scroll_up(n)))
-    [Clear(t), ..rest] -> flush_inner(rest, tree |> append(terminal.clear(t)))
-    [SetSize(x, y), ..rest] -> flush_inner(rest, tree |> append(set_size(x, y)))
-    [SetTitle(s), ..rest] -> flush_inner(rest, tree |> append(set_title(s)))
+    [ScrollDown(n), ..rest] -> flush_inner(rest, append(tree, scroll_down(n)))
+    [ScrollUp(n), ..rest] -> flush_inner(rest, append(tree, scroll_up(n)))
+    [Clear(t), ..rest] -> flush_inner(rest, append(tree, terminal.clear(t)))
+    [SetSize(x, y), ..rest] -> flush_inner(rest, append(tree, set_size(x, y)))
+    [SetTitle(s), ..rest] -> flush_inner(rest, append(tree, set_title(s)))
     [EnableLineWrap, ..rest] ->
-      flush_inner(rest, tree |> append(enable_line_wrap()))
+      flush_inner(rest, append(tree, enable_line_wrap()))
     [DisableLineWrap, ..rest] ->
-      flush_inner(rest, tree |> append(disable_line_wrap()))
+      flush_inner(rest, append(tree, disable_line_wrap()))
     [EnterRaw, ..rest] -> {
       enter_raw()
       flush_inner(rest, tree)
     }
     [EnterAlternateScreen, ..rest] ->
-      flush_inner(rest, tree |> append(enter_alternative()))
+      flush_inner(rest, append(tree, enter_alternative()))
     [LeaveAlternateScreen, ..rest] ->
-      flush_inner(rest, tree |> append(leave_alternative()))
+      flush_inner(rest, append(tree, leave_alternative()))
 
     // event
     [EnableMouseCapture, ..rest] ->
-      flush_inner(rest, tree |> append(enable_mouse_capture()))
+      flush_inner(rest, append(tree, enable_mouse_capture()))
     [DisableMouseCapture, ..rest] ->
-      flush_inner(rest, tree |> append(disable_mouse_capture()))
+      flush_inner(rest, append(tree, disable_mouse_capture()))
+    [DisableFocusChange, ..rest] ->
+      flush_inner(rest, append(tree, disable_focus_change()))
+    [EnableFocusChange, ..rest] ->
+      flush_inner(rest, append(tree, enable_focus_change()))
 
     // TODO: KeyboardEnhancementFlags
     // [PushKeyboardEnhancementFlags(_), ..rest] -> flush_inner(rest, tree)
     // [PopKeyboardEnhancementFlags, ..rest] -> flush_inner(rest, tree)
     [PushKeyboardEnhancementFlags(f), ..rest] ->
-      flush_inner(rest, tree |> append(push_keyboard_enhancement_flags(f)))
+      flush_inner(rest, append(tree, push_keyboard_enhancement_flags(f)))
     [PopKeyboardEnhancementFlags, ..rest] ->
       flush_inner(rest, tree |> append(pop_keyboard_enhancement_flags()))
 
     // style
     [SetForegroundColor(c), ..rest] ->
-      flush_inner(rest, tree |> append(with("", c)))
+      flush_inner(rest, append(tree, with("", c)))
     [SetBackgroundColor(c), ..rest] ->
-      flush_inner(rest, tree |> append(on("", c)))
+      flush_inner(rest, append(tree, on("", c)))
     [SetForegroundAndBackgroundColors(fg, bg), ..rest] ->
-      flush_inner(rest, tree |> append(with_on("", fg, bg)))
-    [ResetColors, ..rest] -> flush_inner(rest, tree |> append(reset_colors("")))
+      flush_inner(rest, append(tree, with_on("", fg, bg)))
+    [ResetColors, ..rest] -> flush_inner(rest, append(tree, reset_colors("")))
     [ResetAttributes, ..rest] ->
-      flush_inner(rest, tree |> append(reset_attributes("")))
+      flush_inner(rest, append(tree, reset_attributes("")))
     [SetAttributes(attrs), ..rest] ->
-      flush_inner(rest, tree |> append(attributes("", attrs)))
+      flush_inner(rest, append(tree, attributes("", attrs)))
   }
 }
 
