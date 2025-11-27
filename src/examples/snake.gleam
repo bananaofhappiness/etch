@@ -1,5 +1,5 @@
 import command
-import event.{Key}
+import event.{Char, DownArrow, Key, LeftArrow, RightArrow, UpArrow}
 import gleam/dict.{type Dict}
 import gleam/erlang/process
 import gleam/int
@@ -32,7 +32,7 @@ type State {
   )
 }
 
-fn main() {
+pub fn main() {
   stdout.execute([
     command.EnterRaw,
     command.EnterAlternateScreen,
@@ -104,14 +104,25 @@ fn spawn_fruit(state: State) -> State {
 
 fn handle_input(state: State) -> State {
   case event.poll(1), state.direction {
-    Some(Key("w")), Down -> state
-    Some(Key("w")), _ -> State(..state, direction: Up)
-    Some(Key("a")), Right -> state
-    Some(Key("a")), _ -> State(..state, direction: Left)
-    Some(Key("s")), Up -> state
-    Some(Key("s")), _ -> State(..state, direction: Down)
-    Some(Key("d")), Left -> state
-    Some(Key("d")), _ -> State(..state, direction: Right)
+    Some(Ok(Key(e))), Down if e.code == Char("w") || e.code == UpArrow -> state
+
+    Some(Ok(Key(e))), _ if e.code == Char("w") || e.code == UpArrow ->
+      State(..state, direction: Up)
+
+    Some(Ok(Key(e))), Right if e.code == Char("a") || e.code == LeftArrow ->
+      state
+    Some(Ok(Key(e))), _ if e.code == Char("a") || e.code == LeftArrow ->
+      State(..state, direction: Left)
+
+    Some(Ok(Key(e))), Up if e.code == Char("s") || e.code == DownArrow -> state
+    Some(Ok(Key(e))), _ if e.code == Char("s") || e.code == DownArrow ->
+      State(..state, direction: Down)
+
+    Some(Ok(Key(e))), Left if e.code == Char("d") || e.code == RightArrow ->
+      state
+    Some(Ok(Key(e))), _ if e.code == Char("d") || e.code == RightArrow ->
+      State(..state, direction: Right)
+
     Some(_), _ -> state
     None, _ -> state
   }

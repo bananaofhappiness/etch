@@ -21,7 +21,7 @@ fn loop() {
 
 fn handle_input() {
   case event.read() {
-    Some(event.Resize(x, y)) -> {
+    Some(Ok(event.Resize(x, y))) -> {
       draw_centered_text(x, y)
     }
     Some(_) -> Nil
