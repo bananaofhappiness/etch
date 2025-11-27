@@ -1,12 +1,9 @@
 import esc.{csi}
 import gleam/erlang/process
 import gleam/int
-import gleam/io
-import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result.{try}
 import gleam/string
-import gleam/string_tree
 
 pub type EventError {
   FailedToParseEvent(String)
@@ -288,8 +285,14 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
 }
 
 fn parse_cursor_position(s: String) -> Result(Event, EventError) {
-  // let split = string.split(s, ";")
-  todo as "Todo cursor position parsing"
+  let code = string.drop_end(s, 1)
+  let split = string.split(code, ";")
+  let res = case split {
+    [x, y] -> Ok(#(x, y))
+    _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
+  }
+  use #(x, y) <- try(res)
+  todo
 }
 
 fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
@@ -299,6 +302,7 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
   let res = case split {
     [code, modifiers, text] -> Ok(#(code, modifiers, Some(text)))
     [code, modifiers] -> Ok(#(code, modifiers, None))
+    [code] -> Ok(#(code, "0", None))
     _ ->
       Error(FailedToParseEvent("Failed to parse u encoded code (CSI <..> u)"))
   }
@@ -312,7 +316,7 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
   }
   use #(code, alternate_code) <- try(res)
 
-  let #(modifier_mask, kind_mask) = parse_modifier_and_kind(modifiers)
+  use #(modifier_mask, kind_mask) <- try(parse_modifier_and_kind(modifiers))
   let #(modifiers, kind, state_from_modifier) = #(
     parse_modifiers(modifier_mask),
     parse_kind(kind_mask),
@@ -323,21 +327,19 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
   {
     Some(#(keycode, state)) -> #(keycode, state)
     None -> {
-      let keycode = case code {
+      let assert Ok(c) =
+        int.parse(code)
+        |> result.unwrap(0)
+        |> string.utf_codepoint()
+      let c = string.from_utf_codepoints([c])
+      let keycode = case c {
         "\r" -> Enter
         "\n" -> Enter
         "\u{001b}" -> Esc
         "\u{0007}" -> Backspace
         "\t" if modifiers.shift -> Backtab
         "\t" -> Tab
-        c -> {
-          let assert Ok(c) =
-            int.parse(c)
-            |> result.unwrap(0)
-            |> string.utf_codepoint()
-          let c = string.from_utf_codepoints([c])
-          Char(c)
-        }
+        c -> Char(c)
       }
       #(keycode, KeyEventState(False, False, False))
     }
@@ -493,12 +495,13 @@ fn parse_special_key_code(code: String) -> Result(Event, EventError) {
   let code = string.drop_end(code, 1)
   let split = string.split(code, ";")
   let res = case split {
-    [a, b] -> Ok(#(a, b))
+    [key, modifier] -> Ok(#(key, modifier))
+    [key] -> Ok(#(key, "0"))
     _ ->
       Error(FailedToParseEvent("Failed to parse special key code (CSI <..> ~)"))
   }
   use #(key, modifier) <- try(res)
-  let #(modifier_mask, kind_mask) = parse_modifier_and_kind(modifier)
+  use #(modifier_mask, kind_mask) <- try(parse_modifier_and_kind(modifier))
   let #(modifiers, kind, state) = #(
     parse_modifiers(modifier_mask),
     parse_kind(kind_mask),
@@ -564,13 +567,23 @@ fn parse_keyboard_enhancement_flags(s: String) -> Result(Event, EventError) {
 }
 
 fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
-  let key = string.last(code) |> result.unwrap("1")
+  let key = string.last(code) |> result.unwrap("A")
   let code = string.drop_end(code, 1)
-  let #(modifier_mask, kind_mask) = parse_modifier_and_kind(code)
+
+  let split = string.split(code, ";")
+  let res = case split {
+    [_, modifiers] -> Ok(modifiers)
+    _ ->
+      Error(FailedToParseEvent("Failed to parse special key code (CSI <..> ~)"))
+  }
+  use modifiers <- try(res)
+
+  use #(modifier_mask, kind_mask) <- try(parse_modifier_and_kind(modifiers))
   let #(modifiers, kind) = #(
     parse_modifiers(modifier_mask),
     parse_kind(kind_mask),
   )
+
   let res = case key {
     "A" -> Ok(UpArrow)
     "B" -> Ok(DownArrow)
@@ -605,19 +618,19 @@ fn parse_kind(kind: Int) -> KeyEventKind {
   }
 }
 
-fn parse_modifier_and_kind(code: String) -> #(Int, Int) {
+fn parse_modifier_and_kind(code: String) -> Result(#(Int, Int), EventError) {
   let split = string.split(code, ":")
   case split {
     [modifier_mask, kind_mask] -> {
       let modifier_mask = int.parse(modifier_mask) |> result.unwrap(0)
       let kind_mask = int.parse(kind_mask) |> result.unwrap(0)
-      #(modifier_mask, kind_mask)
+      Ok(#(modifier_mask, kind_mask))
     }
     [modifier_mask] -> {
       let modifier_mask = int.parse(modifier_mask) |> result.unwrap(0)
-      #(modifier_mask, 0)
+      Ok(#(modifier_mask, 0))
     }
-    _ -> panic as "Unreachable"
+    _ -> Error(FailedToParseEvent("Failed to parse modifiers"))
   }
 }
 
@@ -655,7 +668,7 @@ fn parse_normal_mouse(code: String) -> Result(Event, EventError) {
   use #(cb, cx, cy) <- try(res)
   let column = int.parse(cx) |> result.unwrap(0)
   let row = int.parse(cy) |> result.unwrap(0)
-  use #(modifiers, kind) <- try(parse_cb(code))
+  use #(modifiers, kind) <- try(parse_cb(cb))
 
   Ok(
     Mouse(MouseEvent(kind: kind, modifiers: modifiers, column: column, row: row)),

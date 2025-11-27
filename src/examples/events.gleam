@@ -1,8 +1,10 @@
 import command
+import esc.{csi}
 import event.{
   Char, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
 }
 import gleam/int
+import gleam/io
 import gleam/option.{None, Some}
 import stdout
 import terminal
@@ -29,7 +31,6 @@ pub fn main() {
 }
 
 fn loop() -> a {
-  // process.sleep(16)
   handle_input()
   loop()
 }
