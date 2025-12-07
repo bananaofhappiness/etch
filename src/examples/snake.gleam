@@ -272,7 +272,7 @@ fn draw(state: State) {
   let q1 = colorize(strings)
   let q = stdout.queue(q, q1)
   // let q = stdout.queue(q, q1)
-  let q = stdout.queue(q, [command.ResetColors])
+  let q = stdout.queue(q, [command.ResetStyle])
   stdout.flush(q)
 }
 
@@ -293,7 +293,7 @@ fn colorize_line(str: String, offset: Int) -> String {
     case ch {
       "@" -> style.with_on(ch, style.BrightGreen, bg)
       "$" -> style.with_on(ch, style.Red, bg)
-      _ -> style.with_on(ch, style.Reset, bg)
+      _ -> style.with_on(ch, style.Default, bg)
     }
   })
   |> string.join("")
@@ -320,7 +320,7 @@ fn print_centered_colored_block(
     command.Print(s),
     command.MoveTo(x, y + 1),
     command.Print(lower_border),
-    command.ResetColors,
+    command.ResetStyle,
   ]
 }
 

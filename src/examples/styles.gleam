@@ -1,17 +1,17 @@
 import command.{
   Clear, MoveTo, MoveToNextLine, Print, PrintReset, Println, PrintlnReset,
-  ResetColors,
+  ResetStyle,
 }
 import gleam/list
 import gleam/string
 import stdout.{Queue, execute, flush, queue}
 import style.{
   attributes, blinking, bold, dim, inverse, italic, on, reset_attributes,
-  reset_colors, underline, with, with_on,
+  reset_color, underline, with, with_on,
 }
 import terminal
 
-fn main() {
+pub fn main() {
   let q = Queue([])
   let q =
     q
@@ -34,7 +34,7 @@ fn main() {
     |> bold
     |> italic
     |> with(style.Magenta)
-    <> "and this is dark turquoise. "
+    <> "and this is on dark turquoise. "
     |> bold
     |> italic
     |> on(style.AnsiValue(44))
@@ -46,7 +46,7 @@ fn main() {
   let z =
     "Hi from ETCH! YAAAAAY! "
     |> make_rainbow()
-    |> reset_colors()
+    |> reset_color()
     <> "We defined "
     <> "`make_rainbow`"
     |> attributes([style.Italic, style.Bold, style.Underline])
@@ -65,24 +65,22 @@ fn main() {
       PrintReset(y),
       MoveToNextLine(1),
       Println(z),
-      ResetColors,
+      ResetStyle,
       Print(a),
       MoveToNextLine(2),
     ])
   flush(q)
 
   execute([
-    PrintReset(
+    Println(
       "We can use ANSI color values. This one is DarkSlateGray3 with HotPink3 background."
       |> with_on(style.AnsiValue(116), style.AnsiValue(168)),
     ),
     MoveToNextLine(1),
     Println(
-      "And the colors are reset again, because `with_on` guarantees that colors are reset after applying them.",
+      "The colors are not reset again, because `with_on` does not reset them after applying.",
     ),
   ])
-
-  execute([PrintlnReset("fuck" |> attributes([style.Italic])), Print("shit")])
 }
 
 fn make_rainbow(s: String) -> String {

@@ -1,8 +1,9 @@
 import command
-import esc.{csi}
+import cursor
 import event.{
   Char, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
 }
+import gleam/erlang/process
 import gleam/int
 import gleam/io
 import gleam/option.{None, Some}
@@ -17,7 +18,8 @@ pub fn main() {
     command.EnableMouseCapture,
     command.EnterRaw,
     command.Clear(terminal.All),
-    command.HideCursor,
+    // command.HideCursor,
+    command.SetCursorStyle(cursor.SteadyBar),
     command.EnableFocusChange,
     command.PushKeyboardEnhancementFlags([
       event.DisambiguateEscapeCode,
@@ -30,12 +32,17 @@ pub fn main() {
   loop()
 }
 
-fn loop() -> a {
+fn loop() {
   handle_input()
   loop()
 }
 
 fn handle_input() {
+  // let #(x, y) = case event.get_cursor_position() {
+  //   Ok(#(x, y)) -> #(x, y)
+  //   _ -> #(0, 0)
+  // }
+  // echo #(x, y)
   case event.read() {
     Some(Ok(Mouse(m))) -> {
       stdout.execute([

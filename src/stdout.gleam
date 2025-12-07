@@ -1,12 +1,27 @@
+//// This module provides a way to queue and flush commands.
+//// ```gleam
+//// import stdout.{Queue, queue, flush}
+////
+//// let q = Queue([])
+//// queue(q, [
+////   EnterRaw,
+////   EnterAlternativeScreen,
+////   HideCursor,
+////   Println("Hello from Etch"),
+//// ])
+//// flush(q)
+//// ```
+
 import command.{
   type Command, Clear, DisableFocusChange, DisableLineWrap, DisableMouseCapture,
   EnableFocusChange, EnableLineWrap, EnableMouseCapture, EnterAlternateScreen,
   EnterRaw, HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight,
   MoveTo, MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
   PopKeyboardEnhancementFlags, Print, PrintReset, Println, PrintlnReset,
-  PushKeyboardEnhancementFlags, ResetAttributes, ResetColors, RestorePosition,
-  SavePosition, ScrollDown, ScrollUp, SetAttributes, SetBackgroundColor,
-  SetCursorStyle, SetForegroundAndBackgroundColors, SetForegroundColor, SetSize,
+  PushKeyboardEnhancementFlags, ResetAttributes, ResetBackground, ResetColor,
+  ResetForeground, ResetStyle, RestorePosition, SavePosition, ScrollDown,
+  ScrollUp, SetAttributes, SetBackgroundColor, SetCursorStyle,
+  SetForegroundAndBackgroundColors, SetForegroundColor, SetSize, SetStyle,
   SetTitle, ShowCursor,
 }
 import cursor.{
@@ -14,7 +29,6 @@ import cursor.{
   move_to_next_line, move_to_previous_line, move_to_row, move_up,
   restore_position, save_position, set_cursor_style, show,
 }
-import esc.{csi}
 import event.{
   disable_focus_change, disable_mouse_capture, enable_focus_change,
   enable_mouse_capture, pop_keyboard_enhancement_flags,
@@ -23,24 +37,39 @@ import event.{
 import gleam/io
 import gleam/list
 import gleam/string_tree.{type StringTree, append} as stree
-import style.{attributes, on, reset_attributes, reset_colors, with, with_on}
+import style.{
+  attributes, on, reset_attributes, reset_background, reset_color,
+  reset_foreground, reset_style, set_style, with, with_on,
+}
 import terminal.{
   disable_line_wrap, enable_line_wrap, enter_alternative, enter_raw,
   leave_alternative, scroll_down, scroll_up, set_size, set_title,
 }
 
+const csi = "\u{001b}["
+
+/// Queue for the [`Commands`](#command.html#Command) to flush.
 pub type Queue {
   Queue(commands: List(Command))
 }
 
+/// Adds [`Commands`](#command.html#Command)
+/// to the [`Queue`](stdout.html#Command).
 pub fn queue(queue: Queue, commands: List(Command)) -> Queue {
   Queue(commands: list.append(queue.commands, commands))
 }
 
+/// Flushes the [`Queue`](stdout.html#Command).
 pub fn flush(queue: Queue) -> Queue {
   let tree = stree.new()
   flush_inner(queue.commands, tree)
   Queue(commands: [])
+}
+
+/// Flushes [`Commands`](#command.html#Command) without queueing them beforehand.
+pub fn execute(commands: List(Command)) {
+  let tree = stree.new()
+  flush_inner(commands, tree)
 }
 
 fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
@@ -48,15 +77,13 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
     [] -> io.print(tree |> stree.to_string)
     [Print(str), ..rest] -> flush_inner(rest, tree |> append(str))
     [PrintReset(str), ..rest] ->
-      flush_inner(rest, tree |> append(str) |> append(csi <> "0m"))
+      flush_inner(rest, append(tree, str <> csi <> "0m"))
     [Println(str), ..rest] ->
-      flush_inner(rest, tree |> append(str) |> append(move_to_next_line(1)))
+      flush_inner(rest, append(tree, str <> move_to_next_line(1)))
     [PrintlnReset(str), ..rest] ->
       flush_inner(
         rest,
-        tree
-          |> append(str)
-          |> append(move_to_next_line(1) <> csi <> "0m"),
+        append(tree, str <> move_to_next_line(1) <> csi <> "0m"),
       )
 
     // Cursor
@@ -124,19 +151,17 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, append(tree, on("", c)))
     [SetForegroundAndBackgroundColors(fg, bg), ..rest] ->
       flush_inner(rest, append(tree, with_on("", fg, bg)))
-    [ResetColors, ..rest] -> flush_inner(rest, append(tree, reset_colors("")))
+
+    [SetStyle(s), ..rest] -> flush_inner(rest, append(tree, set_style(s)))
+    [ResetStyle, ..rest] -> flush_inner(rest, append(tree, reset_style("")))
+    [ResetColor, ..rest] -> flush_inner(rest, append(tree, reset_color("")))
+    [ResetForeground, ..rest] ->
+      flush_inner(rest, append(tree, reset_foreground("")))
+    [ResetBackground, ..rest] ->
+      flush_inner(rest, append(tree, reset_background("")))
     [ResetAttributes, ..rest] ->
       flush_inner(rest, append(tree, reset_attributes("")))
     [SetAttributes(attrs), ..rest] ->
       flush_inner(rest, append(tree, attributes("", attrs)))
   }
-}
-
-pub fn execute(commands: List(Command)) {
-  let tree = stree.new()
-  flush_inner(commands, tree)
-}
-
-pub fn println(s: String) {
-  io.print(csi <> "1E" <> s)
 }

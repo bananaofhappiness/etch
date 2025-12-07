@@ -1,14 +1,58 @@
-import esc.{csi}
+//// This module provides functionality to capture different events like
+//// pressing keys, mouse movement etc.
+//// In order to be able to read events, [`init_event_server`](event.html#init_event_server)
+//// must be called at the start of the application. See `events` example.
+//// ```gleam
+//// pub fn main()
+////   stdout.execute([
+////     command.EnterRaw,
+////   ])
+////   init_event_server()
+////   loop()
+////
+//// fn loop() {
+////   handle_input()
+////   loop()
+//// }
+////
+//// fn handle_input() {
+////   case event.read() {
+////     Some(Ok(Mouse(m))) -> {
+////       stdout.execute([
+////         command.Println("Got mouse event"),
+////       ])
+////     }
+////     Some(Ok(Key(s))) -> {
+////         stdout.execute([
+////           command.Println(
+////             "Got key event: \"" <> event.to_string(s.code) <> "\"",
+////           ),
+////         ])
+////         }
+////       }
+////     }
+////     Some(Error(_)) -> Nil
+////     None -> Nil
+////   }
+//// }
+//// ```
+
 import gleam/erlang/process
 import gleam/int
+import gleam/io
 import gleam/option.{type Option, None, Some}
 import gleam/result.{try}
 import gleam/string
 
+const csi = "\u{001b}["
+
+/// Event error.
 pub type EventError {
   FailedToParseEvent(String)
 }
 
+/// Keyboard enhancement flag.
+/// See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
 pub type KeyboardEnhancementFlag {
   DisambiguateEscapeCode
   ReportEventTypes
@@ -17,7 +61,9 @@ pub type KeyboardEnhancementFlag {
   // ReportAssociatedText
 }
 
+/// Modifiers.
 pub type Modifiers {
+  /// Modifiers.
   Modifiers(
     shift: Bool,
     alt: Bool,
@@ -28,27 +74,40 @@ pub type Modifiers {
   )
 }
 
+/// Mouse button.
 pub type MouseButton {
   Left
   Right
   Middle
 }
 
+/// Mouse event kind.
 pub type MouseEventKind {
+  /// Down (pressing).
   Down(MouseButton)
+  /// Up (releasing).
   Up(MouseButton)
+  /// Drag (moving cursor while holding a button).
   Drag(MouseButton)
+  /// Moved cursor.
   Moved
+  /// Scroll down.
   ScrollDown
+  /// Scroll up.
   ScrollUp
+  /// Scroll left.
   ScrollLeft
+  /// Scroll right.
   ScrollRight
 }
 
+/// Mouse event.
 pub type MouseEvent {
+  /// Mouse event.
   MouseEvent(kind: MouseEventKind, column: Int, row: Int, modifiers: Modifiers)
 }
 
+/// Media key code.
 pub type MediaKeyCode {
   Play
   Pause
@@ -65,6 +124,7 @@ pub type MediaKeyCode {
   MuteVolume
 }
 
+/// Modifier key code.
 pub type ModifierKeyCode {
   LeftShift
   LeftControl
@@ -82,6 +142,7 @@ pub type ModifierKeyCode {
   IsoLevel5Shift
 }
 
+/// Key code (key pressed).
 pub type KeyCode {
   Char(String)
   UpArrow
@@ -111,16 +172,19 @@ pub type KeyCode {
   Menu
 }
 
+/// Key event kind.
 pub type KeyEventKind {
   Press
   Repeat
   Release
 }
 
+/// Key event state.
 pub type KeyEventState {
   KeyEventState(keypad: Bool, capslock: Bool, numlock: Bool)
 }
 
+/// Key event.
 pub type KeyEvent {
   KeyEvent(
     code: KeyCode,
@@ -131,6 +195,7 @@ pub type KeyEvent {
   )
 }
 
+/// Event
 pub type Event {
   FocusGained
   FocusLost
@@ -148,12 +213,19 @@ fn start_link() -> Nil
 @external(erlang, "event_ffi", "push")
 fn push(event: Result(Event, EventError)) -> Nil
 
+/// Checks if there is an [`Event`](event.html#Event) available.
+/// Returns None if no events were received within the timeout.
+/// See also [`read`](event.html#read).
 @external(erlang, "event_ffi", "poll")
 pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
 
+/// Checks if there is an [`Event`] available.
+/// Waits forever for an available event.
+/// See also [`poll`](event.html#poll).
 @external(erlang, "event_ffi", "read")
 pub fn read() -> Option(Result(Event, EventError))
 
+/// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
   start_link()
   process.spawn(fn() { input_loop() })
@@ -180,6 +252,7 @@ fn default_key_event(key_code: KeyCode) -> KeyEvent {
   )
 }
 
+/// Convert [`KeyCode`](event.html#KeyCode) to a string.
 pub fn to_string(key_code: KeyCode) -> String {
   case key_code {
     Char(s) -> s
@@ -272,8 +345,7 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
             Ok("M") -> parse_rxvt_mouse(s)
             Ok("~") -> parse_special_key_code(s)
             Ok("u") -> parse_u_encoded_key_code(s)
-            Ok("R") -> parse_cursor_position(s)
-            Ok(_) -> parse_modifier_key_code(s)
+            Ok(s) if s != "R" -> parse_modifier_key_code(s)
             _ -> Error(FailedToParseEvent("Unsupported numbered escape code"))
           }
         }
@@ -284,7 +356,24 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
   }
 }
 
-fn parse_cursor_position(s: String) -> Result(Event, EventError) {
+/// Returns cursor position.
+pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
+  io.print(csi <> "6n")
+  let pos = get_chars("", 32)
+  case pos {
+    "\u{001b}[" <> s -> {
+      case string.last(s) {
+        Ok("R") -> parse_cursor_position(s)
+        _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
+        // fallback
+      }
+    }
+    _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
+    // fallback
+  }
+}
+
+fn parse_cursor_position(s: String) -> Result(#(Int, Int), EventError) {
   let code = string.drop_end(s, 1)
   let split = string.split(code, ";")
   let res = case split {
@@ -292,7 +381,9 @@ fn parse_cursor_position(s: String) -> Result(Event, EventError) {
     _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
   }
   use #(x, y) <- try(res)
-  todo
+  let x = int.parse(x) |> result.unwrap(0)
+  let y = int.parse(y) |> result.unwrap(0)
+  Ok(#(x, y))
 }
 
 fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
@@ -634,6 +725,8 @@ fn parse_modifier_and_kind(code: String) -> Result(#(Int, Int), EventError) {
   }
 }
 
+/// Enables mouse capture.
+/// It is prefered not to use this directly. See [`EnableMouseCapture`](command.html#EnableMouseCapture).
 pub fn enable_mouse_capture() {
   csi
   <> "?1000h"
@@ -647,6 +740,8 @@ pub fn enable_mouse_capture() {
   <> "?1006h"
 }
 
+/// Disables mouse capture.
+/// It is prefered not to use this directly. See [`DisableMouseCapture`](command.html#DisableMouseCapture).
 pub fn disable_mouse_capture() {
   csi
   <> "?1000l"
@@ -764,14 +859,20 @@ fn parse_modifiers(code: Int) -> Modifiers {
   )
 }
 
+/// Enables focus change.
+/// It is prefered not to use this directly. See [`EnableFocusChange`](command.html#EnableFocusChange).
 pub fn enable_focus_change() {
   csi <> "?1004h"
 }
 
+/// Disables focus change.
+/// It is prefered not to use this directly. See [`DisableFocusChange`](command.html#DisableFocusChange).
 pub fn disable_focus_change() {
   csi <> "?1004l"
 }
 
+/// Pushes keyboard enhancement flags.
+/// It is prefered not to use this directly. See [`PushKeyboardEnhancementFlags`](command.html#PushKeyboardEnhancementFlags).
 pub fn push_keyboard_enhancement_flags(flags: List(KeyboardEnhancementFlag)) {
   push_keyboard_enhancement_flags_inner(flags, 0)
 }
@@ -797,6 +898,8 @@ fn push_keyboard_enhancement_flags_inner(
   }
 }
 
+/// Pops keyboard enhancement flags.
+/// It is prefered not to use this directly. See [`PopKeyboardEnhancementFlags`](command.html#PopKeyboardEnhancementFlags).
 pub fn pop_keyboard_enhancement_flags() {
   csi <> "<1u"
 }

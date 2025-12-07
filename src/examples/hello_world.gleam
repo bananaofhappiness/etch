@@ -6,7 +6,7 @@ import stdout.{execute}
 import style
 import terminal.{window_size}
 
-fn main() {
+pub fn main() {
   execute([command.HideCursor])
   let #(x, y) = window_size()
   draw_centered_text(x, y)
@@ -36,7 +36,7 @@ fn draw_centered_text(x: Int, y: Int) {
   // using `with_on` if you want to set both foreground and background colors is slightly
   // faster than using `with` and `on` separately.
   let s =
-    style.with_on(s, style.Black, style.AnsiValue(40)) |> style.reset_colors
+    style.with_on(s, style.Black, style.AnsiValue(40)) |> style.reset_color
   // But here I don't do it because calling `style.magenta()` at the end automatically resets the color.
   let red = "█" |> string.repeat(len) |> style.with(style.Rgb(233, 51, 35))
   let orange = "█" |> string.repeat(len) |> style.with(style.Rgb(241, 161, 57))
