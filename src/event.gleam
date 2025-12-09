@@ -40,6 +40,7 @@
 import gleam/erlang/process
 import gleam/int
 import gleam/io
+import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result.{try}
 import gleam/string
@@ -58,7 +59,7 @@ pub type KeyboardEnhancementFlag {
   ReportEventTypes
   ReportAlternateKeys
   ReportAllKeysAsEscapeCode
-  // ReportAssociatedText
+  ReportAssociatedText
 }
 
 /// Modifiers.
@@ -191,7 +192,7 @@ pub type KeyEvent {
     modifiers: Modifiers,
     kind: KeyEventKind,
     state: KeyEventState,
-    // text:
+    text: String,
   )
 }
 
@@ -232,15 +233,62 @@ pub fn init_event_server() {
 }
 
 fn input_loop() {
-  let char = get_chars("", 1024)
-  let event = case char {
-    "\u{001b}[" <> s -> {
-      handle_escape_code(s)
-    }
-    s -> Ok(Key(default_key_event(Char(s))))
-  }
-  push(event)
+  let str = get_chars("", 1024)
+  let str = string.to_graphemes(str)
+  let events = parse_events(str, "", [], False) |> list.reverse
+  push_events(events)
   input_loop()
+}
+
+fn push_events(events: List(Result(Event, EventError))) {
+  case events {
+    [] -> Nil
+    [e, ..rest] -> {
+      push(e)
+      push_events(rest)
+    }
+  }
+}
+
+fn parse_events(
+  str: List(String),
+  esc_acc: String,
+  list_acc: List(Result(Event, EventError)),
+  in_escape_sequence: Bool,
+) -> List(Result(Event, EventError)) {
+  case str, in_escape_sequence {
+    ["\u{001b}", "[", ..rest], False -> {
+      parse_events(rest, "", list_acc, True)
+    }
+    ["\u{001b}", "[", ..rest], True -> {
+      let list_acc = [
+        Error(FailedToParseEvent("Unterminated escape sequence")),
+        ..list_acc
+      ]
+      parse_events(rest, "", list_acc, True)
+    }
+    [c, ..rest], True -> {
+      let assert Ok(x) = string.to_utf_codepoints(c) |> list.first()
+      let x = string.utf_codepoint_to_int(x)
+      case x {
+        x if x >= 64 && x <= 126 -> {
+          let event = handle_escape_code(esc_acc <> c)
+          let list_acc = [event, ..list_acc]
+          parse_events(rest, "", list_acc, False)
+        }
+        _ -> {
+          parse_events(rest, esc_acc <> c, list_acc, True)
+        }
+      }
+    }
+    [s, ..rest], False -> {
+      let list_acc = [Ok(Key(default_key_event(Char(s)))), ..list_acc]
+      parse_events(rest, esc_acc <> s, list_acc, True)
+    }
+    [], _ -> {
+      list.reverse(list_acc)
+    }
+  }
 }
 
 fn default_key_event(key_code: KeyCode) -> KeyEvent {
@@ -249,6 +297,7 @@ fn default_key_event(key_code: KeyCode) -> KeyEvent {
     kind: Press,
     modifiers: Modifiers(False, False, False, False, False, False),
     state: KeyEventState(False, False, False),
+    text: "",
   )
 }
 
@@ -331,12 +380,13 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
     "P" -> Ok(Key(default_key_event(F(1))))
     "Q" -> Ok(Key(default_key_event(F(2))))
     "S" -> Ok(Key(default_key_event(F(4))))
-    "?" <> s -> {
-      case string.last(s) {
-        Ok("u") -> parse_keyboard_enhancement_flags(s)
-        Ok("s") -> parse_primary_device_attributes(s)
-        _ -> Error(FailedToParseEvent("Failed to parse escape code"))
-      }
+    "?" <> _s -> {
+      // case string.last(s) {
+      //   // Ok("u") -> parse_keyboard_enhancement_flags(s)
+      //   // Ok("s") -> parse_primary_device_attributes(s)
+      //   _ -> Error(FailedToParseEvent("Failed to parse escape code"))
+      // }
+      Error(FailedToParseEvent("Failed to parse escape code"))
     }
     s ->
       case starts_with_number(s) {
@@ -345,7 +395,7 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
             Ok("M") -> parse_rxvt_mouse(s)
             Ok("~") -> parse_special_key_code(s)
             Ok("u") -> parse_u_encoded_key_code(s)
-            Ok(s) if s != "R" -> parse_modifier_key_code(s)
+            Ok(l) if l != "R" -> parse_modifier_key_code(s)
             _ -> Error(FailedToParseEvent("Unsupported numbered escape code"))
           }
         }
@@ -357,6 +407,8 @@ fn handle_escape_code(s: String) -> Result(Event, EventError) {
 }
 
 /// Returns cursor position.
+/// Be careful when calling this function inside a loop where you are also listening for events.
+/// Some events may be lost.
 pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
   io.print(csi <> "6n")
   let pos = get_chars("", 32)
@@ -364,12 +416,10 @@ pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
     "\u{001b}[" <> s -> {
       case string.last(s) {
         Ok("R") -> parse_cursor_position(s)
-        _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
-        // fallback
+        _ -> Error(FailedToParseEvent("Could not get cursor position"))
       }
     }
-    _ -> Error(FailedToParseEvent("Failed to parse cursor position"))
-    // fallback
+    _ -> Error(FailedToParseEvent("Could not get cursor position"))
   }
 }
 
@@ -397,7 +447,17 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
     _ ->
       Error(FailedToParseEvent("Failed to parse u encoded code (CSI <..> u)"))
   }
-  use #(code, modifiers, _text) <- try(res)
+  use #(code, modifiers, text) <- try(res)
+  let text = case text {
+    Some(text) -> {
+      let assert Ok(text) =
+        int.parse(text)
+        |> result.unwrap(0)
+        |> string.utf_codepoint()
+      string.from_utf_codepoints([text])
+    }
+    None -> ""
+  }
 
   let code_parts = string.split(code, ":")
   let res = case code_parts {
@@ -473,7 +533,7 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
       keypad: state_from_modifier.keypad || state_from_keycode.keypad,
       numlock: state_from_modifier.numlock || state_from_keycode.numlock,
     )
-  Ok(Key(KeyEvent(keycode, modifiers, kind, state)))
+  Ok(Key(KeyEvent(keycode, modifiers, kind, state, text)))
 }
 
 fn translate_functional_key_code(
@@ -621,7 +681,15 @@ fn parse_special_key_code(code: String) -> Result(Event, EventError) {
     }
   }
   use key <- try(key)
-  Ok(Key(KeyEvent(code: key, kind: kind, modifiers: modifiers, state: state)))
+  Ok(
+    Key(KeyEvent(
+      code: key,
+      kind: kind,
+      modifiers: modifiers,
+      state: state,
+      text: "",
+    )),
+  )
 }
 
 fn parse_modifier_to_state(modifier_mask: Int) -> KeyEventState {
@@ -642,23 +710,80 @@ fn parse_modifier_to_state(modifier_mask: Int) -> KeyEventState {
 }
 
 fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
-  todo
+  let s = string.drop_end(s, 1)
+  let split = string.split(s, ";")
+  let res = case split {
+    [code, column, row] -> Ok(#(code, column, row))
+    _ -> Error(FailedToParseEvent("Failed to parse sgr mouse code"))
+  }
+  use #(code, column, row) <- try(res)
+
+  let column = int.parse(column) |> result.unwrap(0)
+  let row = int.parse(row) |> result.unwrap(0)
+  let column = column - 1
+  let row = row - 1
+
+  use #(modifiers, kind) <- try(parse_cb(code))
+  Ok(
+    Mouse(MouseEvent(kind: kind, modifiers: modifiers, column: column, row: row)),
+  )
 }
 
 fn starts_with_number(s: String) -> Bool {
   string.first(s) |> result.unwrap("") |> int.parse() |> result.is_ok()
 }
 
-fn parse_primary_device_attributes(s: String) -> Result(Event, EventError) {
-  todo as "Introduce internal events (if it is really needed)"
+/// Get keyboard enhancement flags. See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
+/// Be careful when calling this function inside a loop where you are also listening for events.
+/// Some events may be lost.
+pub fn get_keyboard_enhancement_flags() -> Result(
+  List(KeyboardEnhancementFlag),
+  EventError,
+) {
+  io.print(csi <> "?u")
+  let flags = get_chars("", 32)
+  case flags {
+    "\u{001b}[?" <> s -> {
+      case string.last(s) {
+        Ok("u") -> Ok(parse_keyboard_enhancement_flags(s))
+        _ -> Error(FailedToParseEvent("Could not get cursor position"))
+      }
+    }
+    _ -> Error(FailedToParseEvent("Could not get cursor position"))
+  }
 }
 
-fn parse_keyboard_enhancement_flags(s: String) -> Result(Event, EventError) {
-  todo as "Introduce internal events (if it is really needed)"
+fn parse_keyboard_enhancement_flags(
+  code: String,
+) -> List(KeyboardEnhancementFlag) {
+  let code = string.drop_end(code, 1) |> int.parse() |> result.unwrap(0)
+  let list = []
+
+  let list = case int.bitwise_and(code, 1) != 0 {
+    True -> [DisambiguateEscapeCode, ..list]
+    False -> list
+  }
+  let list = case int.bitwise_and(code, 2) != 0 {
+    True -> [ReportEventTypes, ..list]
+    False -> list
+  }
+  let list = case int.bitwise_and(code, 4) != 0 {
+    True -> [ReportAlternateKeys, ..list]
+    False -> list
+  }
+  let list = case int.bitwise_and(code, 8) != 0 {
+    True -> [ReportAllKeysAsEscapeCode, ..list]
+    False -> list
+  }
+  let list = case int.bitwise_and(code, 16) != 0 {
+    True -> [ReportAssociatedText, ..list]
+    False -> list
+  }
+  list
 }
 
 fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
-  let key = string.last(code) |> result.unwrap("A")
+  let key = string.last(code) |> result.unwrap("fallback")
   let code = string.drop_end(code, 1)
 
   let split = string.split(code, ";")
@@ -696,6 +821,7 @@ fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
       kind: kind,
       modifiers: modifiers,
       state: KeyEventState(False, False, False),
+      text: "",
     )),
   )
 }
@@ -890,8 +1016,8 @@ fn push_keyboard_enhancement_flags_inner(
       push_keyboard_enhancement_flags_inner(rest, acc + 4)
     [ReportAllKeysAsEscapeCode, ..rest] ->
       push_keyboard_enhancement_flags_inner(rest, acc + 8)
-    // [ReportAssociatedText, ..rest] ->
-    //   push_keyboard_enhancement_flags_inner(rest, acc + 16)
+    [ReportAssociatedText, ..rest] ->
+      push_keyboard_enhancement_flags_inner(rest, acc + 16)
     [] -> {
       csi <> ">" <> int.to_string(acc) <> "u"
     }

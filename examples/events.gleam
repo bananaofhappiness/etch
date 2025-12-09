@@ -3,9 +3,7 @@ import cursor
 import event.{
   Char, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
 }
-import gleam/erlang/process
 import gleam/int
-import gleam/io
 import gleam/option.{None, Some}
 import stdout
 import terminal
@@ -18,7 +16,6 @@ pub fn main() {
     command.EnableMouseCapture,
     command.EnterRaw,
     command.Clear(terminal.All),
-    // command.HideCursor,
     command.SetCursorStyle(cursor.SteadyBar),
     command.EnableFocusChange,
     command.PushKeyboardEnhancementFlags([
@@ -26,6 +23,7 @@ pub fn main() {
       event.ReportAlternateKeys,
       event.ReportEventTypes,
       event.ReportAllKeysAsEscapeCode,
+      event.ReportAssociatedText,
     ]),
   ])
   init_event_server()
@@ -38,16 +36,13 @@ fn loop() {
 }
 
 fn handle_input() {
-  // let #(x, y) = case event.get_cursor_position() {
-  //   Ok(#(x, y)) -> #(x, y)
-  //   _ -> #(0, 0)
-  // }
-  // echo #(x, y)
   case event.read() {
     Some(Ok(Mouse(m))) -> {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
+        command.Println("Press Q to exit"),
+        command.Println("Press R to get current cursor position\n"),
         command.Println("Got mouse event"),
         command.Println("Kind: " <> mouse_event_kind_to_string(m.kind)),
         command.Println("Row: " <> int.to_string(m.row)),
@@ -59,6 +54,8 @@ fn handle_input() {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
+        command.Println("Press Q to exit"),
+        command.Println("Press R to get current cursor position\n"),
         command.Println("Window resized. Current size: "),
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
@@ -67,27 +64,70 @@ fn handle_input() {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
+        command.Println("Press Q to exit"),
+        command.Println("Press R to get current cursor position\n"),
         command.Println("Focus gained."),
       ])
     Some(Ok(FocusLost)) ->
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
+        command.Println("Press Q to exit"),
+        command.Println("Press R to get current cursor position\n"),
         command.Println("Focus lost."),
       ])
     Some(Ok(Key(s))) -> {
       case s.code {
         Char("Q") -> halt(0)
+        Char("R") if s.kind == event.Press -> {
+          case event.get_cursor_position() {
+            Ok(#(x, y)) -> {
+              let x = int.to_string(x)
+              let y = int.to_string(y)
+              stdout.execute([
+                command.Println("Cursor position:" <> x <> "," <> y),
+              ])
+            }
+            Error(event.FailedToParseEvent(e)) -> {
+              stdout.execute([
+                command.Println(e),
+              ])
+            }
+          }
+          Nil
+        }
+        Char("R") -> Nil
+        Char("F") -> {
+          case event.get_keyboard_enhancement_flags() {
+            Ok(f) -> {
+              stdout.execute([
+                command.MoveTo(0, 0),
+                command.Clear(terminal.FromCursorDown),
+                command.Println("Press Q to exit"),
+                command.Println("Press R to get current cursor position\n"),
+                command.Println("Flags: " <> flags_to_string(f, "")),
+              ])
+            }
+            Error(event.FailedToParseEvent(e)) -> {
+              stdout.execute([
+                command.Println(e),
+              ])
+            }
+          }
+        }
         _ -> {
           stdout.execute([
             command.MoveTo(0, 0),
             command.Clear(terminal.FromCursorDown),
+            command.Println("Press Q to exit"),
+            command.Println("Press R to get current cursor position\n"),
             command.Println(
               "Got key event: \"" <> event.to_string(s.code) <> "\"",
             ),
             command.Println("Modifiers: " <> modifiers_to_string(s.modifiers)),
             command.Println("Kind: " <> key_event_kind_to_string(s.kind)),
             command.Println("State: " <> key_event_state_to_string(s.state)),
+            command.Println("Text: " <> s.text),
           ])
           Nil
         }
@@ -136,6 +176,26 @@ fn modifiers_to_string(modifiers: event.Modifiers) -> String {
     False -> ""
   }
   shift <> control <> alt
+}
+
+fn flags_to_string(
+  l: List(event.KeyboardEnhancementFlag),
+  acc: String,
+) -> String {
+  case l {
+    [] -> acc
+    [f, ..rest] -> {
+      let f = case f {
+        event.DisambiguateEscapeCode -> "DisambiguateEscapeCode"
+        event.ReportAllKeysAsEscapeCode -> "ReportAllKeysAsEscapeCode"
+        event.ReportAlternateKeys -> "ReportAlternateKeys"
+        event.ReportAssociatedText -> "ReportAssociatedText"
+        event.ReportEventTypes -> "ReportEventTypes"
+      }
+      let acc = acc <> f <> " "
+      flags_to_string(rest, acc)
+    }
+  }
 }
 
 fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
