@@ -37,15 +37,13 @@
 //// }
 //// ```
 
-import gleam/erlang/process
+import etch/internal/consts.{csi}
 import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result.{try}
 import gleam/string
-
-const csi = "\u{001b}["
 
 /// Event error.
 pub type EventError {
@@ -214,6 +212,9 @@ fn start_link() -> Nil
 @external(erlang, "event_ffi", "push")
 fn push(event: Result(Event, EventError)) -> Nil
 
+@external(erlang, "proc_lib", "spawn_link")
+fn spawn_link(f: fn() -> a) -> Nil
+
 /// Checks if there is an [`Event`](event.html#Event) available.
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](event.html#read).
@@ -229,7 +230,8 @@ pub fn read() -> Option(Result(Event, EventError))
 /// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
   start_link()
-  process.spawn(fn() { input_loop() })
+  // process.spawn(fn() { input_loop() })
+  spawn_link(fn() { input_loop() })
 }
 
 fn input_loop() {
@@ -250,7 +252,8 @@ fn push_events(events: List(Result(Event, EventError))) {
   }
 }
 
-fn parse_events(
+@internal
+pub fn parse_events(
   str: List(String),
   esc_acc: String,
   list_acc: List(Result(Event, EventError)),
@@ -283,7 +286,7 @@ fn parse_events(
     }
     [s, ..rest], False -> {
       let list_acc = [Ok(Key(default_key_event(Char(s)))), ..list_acc]
-      parse_events(rest, esc_acc <> s, list_acc, True)
+      parse_events(rest, esc_acc <> s, list_acc, False)
     }
     [], _ -> {
       list.reverse(list_acc)
@@ -364,7 +367,8 @@ pub fn to_string(key_code: KeyCode) -> String {
   }
 }
 
-fn handle_escape_code(s: String) -> Result(Event, EventError) {
+@internal
+pub fn handle_escape_code(s: String) -> Result(Event, EventError) {
   case s {
     "A" -> Ok(Key(default_key_event(UpArrow)))
     "B" -> Ok(Key(default_key_event(DownArrow)))
@@ -423,7 +427,8 @@ pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
   }
 }
 
-fn parse_cursor_position(s: String) -> Result(#(Int, Int), EventError) {
+@internal
+pub fn parse_cursor_position(s: String) -> Result(#(Int, Int), EventError) {
   let code = string.drop_end(s, 1)
   let split = string.split(code, ";")
   let res = case split {
@@ -436,7 +441,8 @@ fn parse_cursor_position(s: String) -> Result(#(Int, Int), EventError) {
   Ok(#(x, y))
 }
 
-fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
   let code = string.drop_end(code, 1)
   let split = string.split(code, ";")
 
@@ -536,7 +542,8 @@ fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
   Ok(Key(KeyEvent(keycode, modifiers, kind, state, text)))
 }
 
-fn translate_functional_key_code(
+@internal
+pub fn translate_functional_key_code(
   code: String,
 ) -> Option(#(KeyCode, KeyEventState)) {
   let keycode = case code {
@@ -572,8 +579,7 @@ fn translate_functional_key_code(
     _ -> None
   }
   case keycode {
-    Some(c) ->
-      Some(#(c, KeyEventState(capslock: False, numlock: False, keypad: True)))
+    Some(c) -> Some(#(c, KeyEventState(False, False, True)))
     None -> {
       let keycode = case code {
         "57358" -> Some(CapsLock)
@@ -642,7 +648,8 @@ fn translate_functional_key_code(
   }
 }
 
-fn parse_special_key_code(code: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_special_key_code(code: String) -> Result(Event, EventError) {
   let code = string.drop_end(code, 1)
   let split = string.split(code, ";")
   let res = case split {
@@ -692,7 +699,8 @@ fn parse_special_key_code(code: String) -> Result(Event, EventError) {
   )
 }
 
-fn parse_modifier_to_state(modifier_mask: Int) -> KeyEventState {
+@internal
+pub fn parse_modifier_to_state(modifier_mask: Int) -> KeyEventState {
   let state = KeyEventState(keypad: False, numlock: False, capslock: False)
   let mask = case modifier_mask - 1 {
     n if n < 0 -> 0
@@ -709,7 +717,8 @@ fn parse_modifier_to_state(modifier_mask: Int) -> KeyEventState {
   state
 }
 
-fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
   let s = string.drop_end(s, 1)
   let split = string.split(s, ";")
   let res = case split {
@@ -729,7 +738,8 @@ fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
   )
 }
 
-fn starts_with_number(s: String) -> Bool {
+@internal
+pub fn starts_with_number(s: String) -> Bool {
   string.first(s) |> result.unwrap("") |> int.parse() |> result.is_ok()
 }
 
@@ -753,7 +763,8 @@ pub fn get_keyboard_enhancement_flags() -> Result(
   }
 }
 
-fn parse_keyboard_enhancement_flags(
+@internal
+pub fn parse_keyboard_enhancement_flags(
   code: String,
 ) -> List(KeyboardEnhancementFlag) {
   let code = string.drop_end(code, 1) |> int.parse() |> result.unwrap(0)
@@ -782,7 +793,8 @@ fn parse_keyboard_enhancement_flags(
   list
 }
 
-fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
   let key = string.last(code) |> result.unwrap("fallback")
   let code = string.drop_end(code, 1)
 
@@ -826,7 +838,8 @@ fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
   )
 }
 
-fn parse_kind(kind: Int) -> KeyEventKind {
+@internal
+pub fn parse_kind(kind: Int) -> KeyEventKind {
   case kind {
     1 -> Press
     2 -> Repeat
@@ -835,7 +848,8 @@ fn parse_kind(kind: Int) -> KeyEventKind {
   }
 }
 
-fn parse_modifier_and_kind(code: String) -> Result(#(Int, Int), EventError) {
+@internal
+pub fn parse_modifier_and_kind(code: String) -> Result(#(Int, Int), EventError) {
   let split = string.split(code, ":")
   case split {
     [modifier_mask, kind_mask] -> {
@@ -881,7 +895,8 @@ pub fn disable_mouse_capture() {
   <> "?1006l"
 }
 
-fn parse_normal_mouse(code: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_normal_mouse(code: String) -> Result(Event, EventError) {
   let res = case string.to_graphemes(code) {
     [cb, cx, cy] -> Ok(#(cb, cx, cy))
     _ -> Error(FailedToParseEvent("Failed to parse normal mouse code"))
@@ -896,7 +911,8 @@ fn parse_normal_mouse(code: String) -> Result(Event, EventError) {
   )
 }
 
-fn parse_sgr_mouse(s: String) -> Result(Event, EventError) {
+@internal
+pub fn parse_sgr_mouse(s: String) -> Result(Event, EventError) {
   let split = string.split(s, ";")
   let res = case split {
     [code, column, row] -> Ok(#(code, column, row))
@@ -925,7 +941,10 @@ fn parse_sgr_mouse(s: String) -> Result(Event, EventError) {
   )
 }
 
-fn parse_cb(code: String) -> Result(#(Modifiers, MouseEventKind), EventError) {
+@internal
+pub fn parse_cb(
+  code: String,
+) -> Result(#(Modifiers, MouseEventKind), EventError) {
   let code = int.parse(code) |> result.unwrap(0)
 
   let button_number =
@@ -970,7 +989,8 @@ fn parse_cb(code: String) -> Result(#(Modifiers, MouseEventKind), EventError) {
   Ok(#(modifiers, kind))
 }
 
-fn parse_modifiers(code: Int) -> Modifiers {
+@internal
+pub fn parse_modifiers(code: Int) -> Modifiers {
   let mask = case code - 1 {
     x if x < 0 -> 0
     x -> x

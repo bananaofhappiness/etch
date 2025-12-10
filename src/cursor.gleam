@@ -1,11 +1,8 @@
 //// This module provides cursor associated functions like moving it,
 //// hiding it or setting its style.
 
+import etch/internal/consts.{csi, esc}
 import gleam/int
-
-const esc = "\u{001b}"
-
-const csi = "\u{001b}["
 
 /// Cursor style.
 pub type CursorStyle {

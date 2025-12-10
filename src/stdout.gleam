@@ -29,6 +29,7 @@ import cursor.{
   move_to_next_line, move_to_previous_line, move_to_row, move_up,
   restore_position, save_position, set_cursor_style, show,
 }
+import etch/internal/consts.{csi}
 import event.{
   disable_focus_change, disable_mouse_capture, enable_focus_change,
   enable_mouse_capture, pop_keyboard_enhancement_flags,
@@ -45,8 +46,6 @@ import terminal.{
   disable_line_wrap, enable_line_wrap, enter_alternative, enter_raw,
   leave_alternative, scroll_down, scroll_up, set_size, set_title,
 }
-
-const csi = "\u{001b}["
 
 /// Queue for the [`Commands`](#command.html#Command) to flush.
 pub type Queue {

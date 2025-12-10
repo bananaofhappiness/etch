@@ -42,7 +42,8 @@ fn handle_input() {
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position\n"),
+        command.Println("Press R to get current cursor position"),
+        command.Println("Press F to get keyboard enhancement flags\n"),
         command.Println("Got mouse event"),
         command.Println("Kind: " <> mouse_event_kind_to_string(m.kind)),
         command.Println("Row: " <> int.to_string(m.row)),
@@ -55,7 +56,8 @@ fn handle_input() {
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position\n"),
+        command.Println("Press R to get current cursor position"),
+        command.Println("Press F to get keyboard enhancement flags\n"),
         command.Println("Window resized. Current size: "),
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
@@ -65,7 +67,8 @@ fn handle_input() {
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position\n"),
+        command.Println("Press R to get current cursor position"),
+        command.Println("Press F to get keyboard enhancement flags\n"),
         command.Println("Focus gained."),
       ])
     Some(Ok(FocusLost)) ->
@@ -73,7 +76,8 @@ fn handle_input() {
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position\n"),
+        command.Println("Press R to get current cursor position"),
+        command.Println("Press F to get keyboard enhancement flags\n"),
         command.Println("Focus lost."),
       ])
     Some(Ok(Key(s))) -> {
@@ -104,7 +108,8 @@ fn handle_input() {
                 command.MoveTo(0, 0),
                 command.Clear(terminal.FromCursorDown),
                 command.Println("Press Q to exit"),
-                command.Println("Press R to get current cursor position\n"),
+                command.Println("Press R to get current cursor position"),
+                command.Println("Press F to get keyboard enhancement flags\n"),
                 command.Println("Flags: " <> flags_to_string(f, "")),
               ])
             }
@@ -120,7 +125,8 @@ fn handle_input() {
             command.MoveTo(0, 0),
             command.Clear(terminal.FromCursorDown),
             command.Println("Press Q to exit"),
-            command.Println("Press R to get current cursor position\n"),
+            command.Println("Press R to get current cursor position"),
+            command.Println("Press F to get keyboard enhancement flags\n"),
             command.Println(
               "Got key event: \"" <> event.to_string(s.code) <> "\"",
             ),

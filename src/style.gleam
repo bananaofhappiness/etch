@@ -1,6 +1,7 @@
-import gleam/int
+//// This module provides utilities for styling terminal text.
 
-const csi = "\u{001b}["
+import etch/internal/consts.{csi}
+import gleam/int
 
 /// A type that represents a color that can be set as foreground or background.
 pub type Color {

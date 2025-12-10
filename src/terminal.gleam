@@ -1,11 +1,8 @@
 //// This module provides terminal associated functions like
 //// entering raw mode, alternative screen, setting title etc.
 
+import etch/internal/consts.{csi, esc}
 import gleam/int
-
-const esc = "\u{001b}"
-
-const csi = "\u{001b}["
 
 /// Used in [`clear`](terminal.html#clear) function.
 pub type ClearType {

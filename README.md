@@ -1,24 +1,120 @@
-# etch
+# Etch - A Gleam TUI Backend Library
 
 [![Package Version](https://img.shields.io/hexpm/v/etch)](https://hex.pm/packages/etch)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/etch/)
 
-```sh
-gleam add etch@1
-```
-```gleam
-import etch
+Etch is a powerful terminal user interface (TUI) backend library for Gleam, designed to help you build rich, interactive terminal applications with ease. It provides a comprehensive set of tools for managing terminal output, handling events, and styling text, with no third-party dependencies.
 
-pub fn main() -> Nil {
-  // TODO: An example of the project in use
+## Features
+
+### Terminal Control
+- **Raw Mode**: Enter and exit raw mode for direct terminal control
+- **Alternative Screen**: Switch between main and alternative screen buffers
+- **Window Management**: Get and set terminal dimensions
+- **Screen Clearing**: Clear the screen or specific portions with various options
+- **Line Wrapping**: Enable or disable line wrapping
+- **Scrolling**: Scroll the terminal content up or down
+
+### Cursor Management
+- **Positioning**: Move cursor to specific positions or relative offsets
+- **Visibility**: Show or hide the cursor
+- **Position Saving**: Save and restore cursor positions
+- **Styling**: Set cursor style (block, underscore, bar) with blinking options
+
+### Event Handling
+- **Keyboard Input**: Capture and parse keyboard events with modifiers
+- **Mouse Support**: Handle mouse events (clicks, drags, scrolls)
+- **Focus Management**: Detect focus gain/loss events
+- **Window Resizing**: Respond to terminal resize events
+- **Keyboard Enhancement**: Support for [progressive keyboard enhancement flags](https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement)
+
+### Text Styling
+- **Colors**: Full color support including:
+  - Standard colors (black, red, green, etc.)
+  - Bright variants
+  - 256 ANSI colors
+  - True RGB colors
+- **Attributes**: Text styling with bold, dim, italic, underline, blinking, and inverse
+- **Style Management**: Save and apply complex styles (foreground, background, attributes)
+
+### Command System
+- **Queue System**: Batch and flush terminal commands efficiently
+- **Comprehensive Commands**: Wide range of commands for all terminal operations
+- **Immediate Execution**: Execute commands without queueing
+
+## Getting Started
+
+Here's a basic template to get you started with Etch:
+
+```gleam
+import etch/command
+import etch/terminal
+import etch/style
+import etch/stdout.{type Queue, execute, flush, queue}
+
+pub fn main() {
+  // Use execute to execute `Commands`
+  execute([
+    command.EnterRaw,
+    command.EnterAlternateScreen,
+    command.HideCursor,
+    command.Clear(terminal.All)
+  ])
+
+  // Queue `Commands`
+  let q = Queue([
+    command.SetForegroundColor(style.Red),
+    command.SetBackgroundColor(style.Black),
+  ])
+  let text = "Styled text"
+  let q = queue(q, [command.Println(text)])
+  
+  // Flush queued `Commands`
+  flush(q)
 }
 ```
 
-Further documentation can be found at <https://hexdocs.pm/etch>.
+## Examples
 
-## Development
+Check out the examples in the `examples/` directory for more advanced usage:
 
+- `hello_world.gleam`: Basic text rendering and centering
+- `events.gleam`: Comprehensive event handling
+- `snake.gleam`: Simple game implementation
+- `styles.gleam`: Advanced text styling techniques
+
+To run the use this command:
 ```sh
-gleam run   # Run the project
-gleam test  # Run the tests
+gleam run -m examples/{example_name}
 ```
+
+## Documentation
+
+For detailed API documentation, see the [documentation](https://hexdocs.pm/etch/) for the Etch package.
+
+## Building and Shipping Your App
+
+1. **Add Etch and gleescript to your project**:
+   ```sh
+   gleam add etch
+   gleam add --dev gleescript
+   ```
+
+2. **Build your application**:
+   ```sh
+   gleam build
+   gleam run -m gleescript
+   ```
+You will get an executable file in your project's root directory. Users must have Erlang installed in order to run your executable.
+
+## Contributing.
+
+Feel free to open issues and make pull requests.
+
+## Authors
+
+* Egor Kurtashkin — project owner and creator.
+
+## License
+
+This project is licensed under MIT License. See LICENSE file for details.
