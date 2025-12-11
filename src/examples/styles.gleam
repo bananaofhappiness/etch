@@ -2,14 +2,14 @@ import etch/command.{
   Clear, MoveTo, MoveToNextLine, Print, PrintReset, Println, PrintlnReset,
   ResetStyle,
 }
-import gleam/list
-import gleam/string
 import etch/stdout.{Queue, execute, flush, queue}
 import etch/style.{
   attributes, blinking, bold, dim, inverse, italic, on, reset_attributes,
   reset_color, underline, with, with_on,
 }
 import etch/terminal
+import gleam/list
+import gleam/string
 
 pub fn main() {
   let q = Queue([])

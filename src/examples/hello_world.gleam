@@ -1,10 +1,10 @@
 import etch/command
 import etch/event
-import gleam/option.{None, Some}
-import gleam/string
 import etch/stdout.{execute}
 import etch/style
 import etch/terminal.{window_size}
+import gleam/option.{None, Some}
+import gleam/string
 
 pub fn main() {
   execute([command.HideCursor])

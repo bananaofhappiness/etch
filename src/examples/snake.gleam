@@ -1,5 +1,8 @@
 import etch/command
 import etch/event.{Char, DownArrow, Key, LeftArrow, RightArrow, UpArrow}
+import etch/stdout
+import etch/style
+import etch/terminal
 import gleam/dict.{type Dict}
 import gleam/erlang/process
 import gleam/int
@@ -7,9 +10,6 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 import gleam/string_tree as stree
-import etch/stdout
-import etch/style
-import etch/terminal
 
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
