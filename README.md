@@ -5,6 +5,8 @@
 
 Etch is a powerful terminal user interface (TUI) backend library for Gleam, designed to help you build rich, interactive terminal applications with ease. It provides a comprehensive set of tools for managing terminal output, handling events, and styling text, with no third-party dependencies.
 
+This project was inspired by [crossterm](https://github.com/crossterm-rs/crossterm).
+
 ## Features
 
 ### Terminal Control
@@ -93,6 +95,8 @@ gleam run -m examples/{example_name}
 For detailed API documentation, see the [documentation](https://hexdocs.pm/etch/) for the Etch package.
 
 ## Building and Shipping Your App
+
+To build the app into single executable:
 
 1. **Add Etch and gleescript to your project**:
    ```sh

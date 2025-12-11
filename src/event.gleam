@@ -38,6 +38,7 @@
 //// ```
 
 import etch/internal/consts.{csi}
+import gleam/erlang/process
 import gleam/int
 import gleam/io
 import gleam/list
@@ -212,16 +213,13 @@ fn start_link() -> Nil
 @external(erlang, "event_ffi", "push")
 fn push(event: Result(Event, EventError)) -> Nil
 
-@external(erlang, "proc_lib", "spawn_link")
-fn spawn_link(f: fn() -> a) -> Nil
-
 /// Checks if there is an [`Event`](event.html#Event) available.
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](event.html#read).
 @external(erlang, "event_ffi", "poll")
 pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
 
-/// Checks if there is an [`Event`] available.
+/// Checks if there is an [`Event`](event.html#Event) available.
 /// Waits forever for an available event.
 /// See also [`poll`](event.html#poll).
 @external(erlang, "event_ffi", "read")
@@ -230,8 +228,7 @@ pub fn read() -> Option(Result(Event, EventError))
 /// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
   start_link()
-  // process.spawn(fn() { input_loop() })
-  spawn_link(fn() { input_loop() })
+  process.spawn(fn() { input_loop() })
 }
 
 fn input_loop() {
@@ -807,6 +804,7 @@ pub fn parse_modifier_key_code(code: String) -> Result(Event, EventError) {
   use modifiers <- try(res)
 
   use #(modifier_mask, kind_mask) <- try(parse_modifier_and_kind(modifiers))
+
   let #(modifiers, kind) = #(
     parse_modifiers(modifier_mask),
     parse_kind(kind_mask),
@@ -959,9 +957,9 @@ pub fn parse_cb(
       shift: int.bitwise_and(code, 4) != 0,
       alt: int.bitwise_and(code, 8) != 0,
       control: int.bitwise_and(code, 16) != 0,
-      super: False,
-      hyper: False,
-      meta: False,
+      super: int.bitwise_and(code, 32) != 0,
+      hyper: int.bitwise_and(code, 64) != 0,
+      meta: int.bitwise_and(code, 128) != 0,
     )
   let button = case button_number {
     0 -> Left

@@ -2,7 +2,7 @@ import event.{
   Char, DisambiguateEscapeCode, Down, DownArrow, Drag, End, Enter, F,
   FailedToParseEvent, FocusGained, FocusLost, Home, Key, KeyEvent, KeyEventState,
   Left, LeftArrow, LeftShift, Media, Middle, Modifier, Modifiers, Mouse,
-  MouseEvent, Play, Press, Release, Repeat, ReportEventTypes, RightArrow, Up,
+  MouseEvent, Moved, Play, Press, Release, Repeat, ReportEventTypes, Right, Up,
   UpArrow, handle_escape_code, parse_cb, parse_cursor_position, parse_events,
   parse_keyboard_enhancement_flags, parse_kind, parse_modifier_and_kind,
   parse_modifier_key_code, parse_modifier_to_state, parse_modifiers,
@@ -132,10 +132,10 @@ pub fn handle_escape_code_test() {
         "",
       )),
     )
-  assert handle_escape_code("C")
+  assert handle_escape_code("P")
     == Ok(
       Key(KeyEvent(
-        RightArrow,
+        F(1),
         Modifiers(
           shift: False,
           alt: False,
@@ -149,18 +149,11 @@ pub fn handle_escape_code_test() {
         "",
       )),
     )
-  assert handle_escape_code("D")
+  assert handle_escape_code("1;30S")
     == Ok(
       Key(KeyEvent(
-        LeftArrow,
-        Modifiers(
-          shift: False,
-          alt: False,
-          control: False,
-          super: False,
-          hyper: False,
-          meta: False,
-        ),
+        F(4),
+        Modifiers(True, False, True, True, True, False),
         Press,
         KeyEventState(False, False, False),
         "",
@@ -286,15 +279,15 @@ pub fn parse_special_key_code_test() {
       )),
     )
 
-  // Test function keys
-  assert parse_special_key_code("11~")
+  // Test function keys with modifiers
+  assert parse_special_key_code("11;6~")
     == Ok(
       Key(KeyEvent(
         F(1),
         Modifiers(
-          shift: False,
+          shift: True,
           alt: False,
-          control: False,
+          control: True,
           super: False,
           hyper: False,
           meta: False,
@@ -392,11 +385,11 @@ pub fn parse_modifier_and_kind_test() {
 
 // Test parse_normal_mouse function
 pub fn parse_normal_mouse_test() {
-  let result = parse_normal_mouse("012")
+  let result = parse_normal_mouse("212")
   let expected =
     Ok(
       Mouse(MouseEvent(
-        Down(Left),
+        Down(Right),
         1,
         2,
         Modifiers(
@@ -436,7 +429,6 @@ pub fn parse_sgr_mouse_test() {
 
 // Test parse_cb function
 pub fn parse_cb_test() {
-  let result = parse_cb("0")
   let expected =
     Ok(#(
       Modifiers(
@@ -449,9 +441,8 @@ pub fn parse_cb_test() {
       ),
       Down(Left),
     ))
-  assert result == expected
+  assert parse_cb("0") == expected
 
-  let result = parse_cb("32")
   let expected =
     Ok(#(
       Modifiers(
@@ -464,7 +455,21 @@ pub fn parse_cb_test() {
       ),
       Drag(Left),
     ))
-  assert result == expected
+  assert parse_cb("32") == expected
+
+  let expected =
+    Ok(#(
+      Modifiers(
+        shift: False,
+        alt: False,
+        control: False,
+        super: False,
+        hyper: False,
+        meta: False,
+      ),
+      Moved,
+    ))
+  assert parse_cb("96") == expected
 }
 
 // Test parse_modifiers function
