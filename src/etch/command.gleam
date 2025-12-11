@@ -12,10 +12,10 @@
 //// flush(q)
 //// ```
 
-import cursor.{type CursorStyle}
-import event.{type KeyboardEnhancementFlag}
-import style.{type Attribute, type Color, type Style}
-import terminal.{type ClearType}
+import etch/cursor.{type CursorStyle}
+import etch/event.{type KeyboardEnhancementFlag}
+import etch/style.{type Attribute, type Color, type Style}
+import etch/terminal.{type ClearType}
 
 /// Commands can be queued and flushed afterwards.
 /// See [`Queue`](stdout.html#Queue), [`flush`](stdout.html#flush)

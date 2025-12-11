@@ -12,7 +12,7 @@
 //// flush(q)
 //// ```
 
-import command.{
+import etch/command.{
   type Command, Clear, DisableFocusChange, DisableLineWrap, DisableMouseCapture,
   EnableFocusChange, EnableLineWrap, EnableMouseCapture, EnterAlternateScreen,
   EnterRaw, HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight,
@@ -24,28 +24,28 @@ import command.{
   SetForegroundAndBackgroundColors, SetForegroundColor, SetSize, SetStyle,
   SetTitle, ShowCursor,
 }
-import cursor.{
+import etch/cursor.{
   hide, move_down, move_left, move_right, move_to, move_to_column,
   move_to_next_line, move_to_previous_line, move_to_row, move_up,
   restore_position, save_position, set_cursor_style, show,
 }
-import etch/internal/consts.{csi}
-import event.{
+import etch/event.{
   disable_focus_change, disable_mouse_capture, enable_focus_change,
   enable_mouse_capture, pop_keyboard_enhancement_flags,
   push_keyboard_enhancement_flags,
 }
-import gleam/io
-import gleam/list
-import gleam/string_tree.{type StringTree, append} as stree
-import style.{
+import etch/internal/consts.{csi}
+import etch/style.{
   attributes, on, reset_attributes, reset_background, reset_color,
   reset_foreground, reset_style, set_style, with, with_on,
 }
-import terminal.{
+import etch/terminal.{
   disable_line_wrap, enable_line_wrap, enter_alternative, enter_raw,
   leave_alternative, scroll_down, scroll_up, set_size, set_title,
 }
+import gleam/io
+import gleam/list
+import gleam/string_tree.{type StringTree, append} as stree
 
 /// Queue for the [`Commands`](#command.html#Command) to flush.
 pub type Queue {

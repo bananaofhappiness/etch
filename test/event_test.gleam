@@ -1,4 +1,4 @@
-import event.{
+import etch/event.{
   Char, DisambiguateEscapeCode, Down, DownArrow, Drag, End, Enter, F,
   FailedToParseEvent, FocusGained, FocusLost, Home, Key, KeyEvent, KeyEventState,
   Left, LeftArrow, LeftShift, Media, Middle, Modifier, Modifiers, Mouse,

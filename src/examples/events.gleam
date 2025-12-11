@@ -1,12 +1,12 @@
-import command
-import cursor
-import event.{
+import etch/cursor
+import etch/command
+import etch/event.{
   Char, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
 }
 import gleam/int
 import gleam/option.{None, Some}
-import stdout
-import terminal
+import etch/stdout
+import etch/terminal
 
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
