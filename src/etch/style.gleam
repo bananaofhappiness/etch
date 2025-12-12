@@ -274,203 +274,227 @@ pub fn reset_attributes(s: String) -> String {
 /// Sets the foreground [`Color`](style.html#Color) to black and
 /// resets the color afterwards.
 pub fn black(s: String) -> String {
-  csi <> "30m" <> s <> csi <> "0m"
+  csi <> "30m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to red and
 /// resets the color afterwards.
 pub fn red(s: String) -> String {
-  csi <> "31m" <> s <> csi <> "0m"
+  csi <> "31m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright red and
 /// resets the color afterwards.
 pub fn bright_red(s: String) -> String {
-  csi <> "91m" <> s <> csi <> "0m"
+  csi <> "91m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to green and
 /// resets the color afterwards.
 pub fn green(s: String) -> String {
-  csi <> "32m" <> s <> csi <> "0m"
+  csi <> "32m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright green and
 /// resets the color afterwards.
 pub fn bright_green(s: String) -> String {
-  csi <> "92m" <> s <> csi <> "0m"
+  csi <> "92m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to yellow and
 /// resets the color afterwards.
 pub fn yellow(s: String) -> String {
-  csi <> "33m" <> s <> csi <> "0m"
+  csi <> "33m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright yellow and
 /// resets the color afterwards.
 pub fn bright_yellow(s: String) -> String {
-  csi <> "93m" <> s <> csi <> "0m"
+  csi <> "93m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to blue and
 /// resets the color afterwards.
 pub fn blue(s: String) -> String {
-  csi <> "34m" <> s <> csi <> "0m"
+  csi <> "34m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright blue and
 /// resets the color afterwards.
 pub fn bright_blue(s: String) -> String {
-  csi <> "94m" <> s <> csi <> "0m"
+  csi <> "94m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to magenta and
 /// resets the color afterwards.
 pub fn magenta(s: String) -> String {
-  csi <> "35m" <> s <> csi <> "0m"
+  csi <> "35m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright magenta and
 /// resets the color afterwards.
 pub fn bright_magenta(s: String) -> String {
-  csi <> "95m" <> s <> csi <> "0m"
+  csi <> "95m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to cyan and
 /// resets the color afterwards.
 pub fn cyan(s: String) -> String {
-  csi <> "36m" <> s <> csi <> "0m"
+  csi <> "36m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright cyan and
 /// resets the color afterwards.
 pub fn bright_cyan(s: String) -> String {
-  csi <> "96m" <> s <> csi <> "0m"
+  csi <> "96m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to white and
 /// resets the color afterwards.
 pub fn white(s: String) -> String {
-  csi <> "37m" <> s <> csi <> "0m"
+  csi <> "37m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright white and
 /// resets the color afterwards.
 pub fn bright_white(s: String) -> String {
-  csi <> "97m" <> s <> csi <> "0m"
+  csi <> "97m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to bright grey and
 /// resets the color afterwards.
 pub fn bright_grey(s: String) -> String {
-  csi <> "38;5;7m" <> s <> csi <> "0m"
+  csi <> "38;5;7m" <> s <> csi <> "39m"
 }
 
 /// Sets the foreground [`Color`](style.html#Color) to grey and
 /// resets the color afterwards.
 pub fn grey(s: String) -> String {
-  csi <> "90m" <> s <> csi <> "0m"
+  csi <> "90m" <> s <> csi <> "39m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to black
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_black(s: String) -> String {
-  csi <> "40m" <> s <> csi <> "0m"
+  csi <> "40m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to red
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_red(s: String) -> String {
-  csi <> "41m" <> s <> csi <> "0m"
+  csi <> "41m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright red
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_red(s: String) -> String {
-  csi <> "101m" <> s <> csi <> "0m"
+  csi <> "101m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to green
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_green(s: String) -> String {
-  csi <> "42m" <> s <> csi <> "0m"
+  csi <> "42m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright green
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_green(s: String) -> String {
-  csi <> "102m" <> s <> csi <> "0m"
+  csi <> "102m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to yellow
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_yellow(s: String) -> String {
-  csi <> "43m" <> s <> csi <> "0m"
+  csi <> "43m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright yellow
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_yellow(s: String) -> String {
-  csi <> "103m" <> s <> csi <> "0m"
+  csi <> "103m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to blue
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_blue(s: String) -> String {
-  csi <> "44m" <> s <> csi <> "0m"
+  csi <> "44m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright blue
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_blue(s: String) -> String {
-  csi <> "104m" <> s <> csi <> "0m"
+  csi <> "104m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to magenta
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_magenta(s: String) -> String {
-  csi <> "45m" <> s <> csi <> "0m"
+  csi <> "45m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright magenta
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_magenta(s: String) -> String {
-  csi <> "105m" <> s <> csi <> "0m"
+  csi <> "105m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to cyan
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_cyan(s: String) -> String {
-  csi <> "46m" <> s <> csi <> "0m"
+  csi <> "46m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright cyan
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_cyan(s: String) -> String {
-  csi <> "106m" <> s <> csi <> "0m"
+  csi <> "106m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to white
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_white(s: String) -> String {
-  csi <> "47m" <> s <> csi <> "0m"
+  csi <> "47m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright white
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_white(s: String) -> String {
-  csi <> "107m" <> s <> csi <> "0m"
+  csi <> "107m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to bright grey
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_bright_grey(s: String) -> String {
-  csi <> "48;5;7m" <> s <> csi <> "0m"
+  csi <> "48;5;7m" <> s <> csi <> "49m"
 }
 
 /// Sets the background [`Color`](style.html#Color) to grey
-/// and resets it aftewards.
+/// and resets it afterwards.
 pub fn on_grey(s: String) -> String {
-  csi <> "100m" <> s <> csi <> "0m"
+  csi <> "100m" <> s <> csi <> "49m"
+}
+
+/// Sets the foreground [`Color`](style.html#Color) to the given ANSI value
+/// and resets it afterwards.
+pub fn ansi(s: String, value: Int) -> String {
+  csi <> get_fg(AnsiValue(value)) <> "m" <> s <> csi <> "39m"
+}
+
+/// Sets the background [`Color`](style.html#Color) to the given ANSI value
+/// and resets it afterwards.
+pub fn on_ansi(s: String, value: Int) -> String {
+  csi <> get_bg(AnsiValue(value)) <> "m" <> s <> csi <> "49m"
+}
+
+/// Sets the foreground [`Color`](style.html#Color) to the given RBG color
+/// and resets it afterwards.
+pub fn rbg(s: String, r: Int, g: Int, b: Int) -> String {
+  csi <> get_fg(Rgb(r, g, b)) <> "m" <> s <> csi <> "39m"
+}
+
+/// Sets the background [`Color`](style.html#Color) to the given RBG color
+/// and resets it afterwards.
+pub fn on_rbg(s: String, r: Int, g: Int, b: Int) -> String {
+  csi <> get_bg(Rgb(r, g, b)) <> "m" <> s <> csi <> "49m"
 }

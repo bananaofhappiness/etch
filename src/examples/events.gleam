@@ -1,3 +1,5 @@
+//// This example shows how to handle user inputs and events.
+
 import etch/command
 import etch/cursor
 import etch/event.{
@@ -14,6 +16,8 @@ fn halt(n: Int) -> Nil
 pub fn main() {
   stdout.execute([
     command.EnableMouseCapture,
+    // Raw modeDisables terminal input/output processing so the program
+    // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
     command.EnterRaw,
     command.Clear(terminal.All),
     command.SetCursorStyle(cursor.SteadyBar),
@@ -26,6 +30,7 @@ pub fn main() {
       event.ReportAssociatedText,
     ]),
   ])
+  // Make sure you init event server before handling user input and events.
   init_event_server()
   loop()
 }
@@ -36,7 +41,13 @@ fn loop() {
 }
 
 fn handle_input() {
+  // We call `event.read()` to wait for available input.
+  // It blocks program execution until an event is received.
+  // This is exactly what we need, because the project has no logic
+  // running constantly in the background. We only need to update the screen
+  // when its size changes.
   case event.read() {
+    // the rest of the code speaks for itself.
     Some(Ok(Mouse(m))) -> {
       stdout.execute([
         command.MoveTo(0, 0),
@@ -143,6 +154,8 @@ fn handle_input() {
     None -> Nil
   }
 }
+
+// Functions below are use to display events data, nothing interesting.
 
 fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   let capslock = case key_event_state.capslock {

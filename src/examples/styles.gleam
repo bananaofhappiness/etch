@@ -1,86 +1,55 @@
-import etch/command.{
-  Clear, MoveTo, MoveToNextLine, Print, PrintReset, Println, PrintlnReset,
-  ResetStyle,
-}
-import etch/stdout.{Queue, execute, flush, queue}
+import etch/command
+import etch/stdout
 import etch/style.{
-  attributes, blinking, bold, dim, inverse, italic, on, reset_attributes,
-  reset_color, underline, with, with_on,
+  attributes, on, on_green, red, reset_color, underline, with, with_on,
 }
 import etch/terminal
 import gleam/list
 import gleam/string
 
 pub fn main() {
-  let q = Queue([])
-  let q =
-    q
-    |> queue([
-      Clear(terminal.All),
-      MoveTo(0, 0),
-      command.EnableLineWrap,
-    ])
+  stdout.execute([command.Clear(terminal.All), command.MoveTo(0, 0)])
+  let line1 = "This example shows how to apply some style to a text."
+  let line2 =
+    "We can use"
+    <> "`with`" |> with(style.BrightRed)
+    <> ","
+    <> "`on`" |> on(style.BrightGreen)
+    <> "and "
+    <> "`with_on`." |> with_on(style.Magenta, style.BrightYellow)
+  let line3 =
+    "(Note that if you want to set both foreground and background, `with_on` is slightly faster than `with` and `on`)."
+  let line4 =
+    "And we can also apply attributes using `attributes`. This line is bold, italic and with inversed colors."
+    |> attributes([style.Bold, style.Italic, style.Inverse])
 
-  let x =
-    "Hi! This one is dim, italic, blinking, underlined with inversed colors! (your terminal may not support some attributes)."
-    |> dim
-    |> italic
-    |> blinking
-    |> inverse
-    |> underline
-
-  let y =
-    "`command.PrintlnReset()` resets our color. Now we can use different styles. This one is magenta "
-    |> bold
-    |> italic
-    |> with(style.Magenta)
-    <> "and this is on dark turquoise. "
-    |> bold
-    |> italic
-    |> on(style.AnsiValue(44))
-    <> "As you can see, we can easily apply different styles."
-    |> dim
-    |> inverse
-    |> underline
-
-  let z =
-    "Hi from ETCH! YAAAAAY! "
-    |> make_rainbow()
-    |> reset_color()
-    <> "We defined "
-    <> "`make_rainbow`"
-    |> attributes([style.Italic, style.Bold, style.Underline])
-    |> reset_attributes()
-    <> " function and made this text "
-    <> "RAINBOW!"
-    |> make_rainbow()
-
-  let a =
-    "And now the colors are reset after we call `command.ResetColors`. Try commenting it and this text will turn red, because we never reset the color after using `make_rainbow`."
-
-  let q =
-    q
-    |> queue([
-      PrintlnReset(x),
-      PrintReset(y),
-      MoveToNextLine(1),
-      Println(z),
-      ResetStyle,
-      Print(a),
-      MoveToNextLine(2),
-    ])
-  flush(q)
-
-  execute([
-    Println(
-      "We can use ANSI color values. This one is DarkSlateGray3 with HotPink3 background."
-      |> with_on(style.AnsiValue(116), style.AnsiValue(168)),
-    ),
-    MoveToNextLine(1),
-    Println(
-      "The colors are not reset again, because `with_on` does not reset them after applying.",
-    ),
+  stdout.execute([
+    command.Println(line1),
+    command.Println(line2),
+    command.Println(line3),
+    command.PrintlnReset(line4),
   ])
+
+  let line5 =
+    "As you can see, none of these functions reset colors or attributes. To reset it, we called PrintlnReset command at the previous line."
+  stdout.execute([command.Println(line5)])
+  let line6 =
+    "If we call commands like "
+    <> "`red`" |> red()
+    <> ", "
+    <> "`on_green`" |> on_green()
+    <> ", "
+    <> "`underline`" |> underline()
+    <> ", they reset their color/attribute after calling them."
+  stdout.execute([command.Println(line6)])
+
+  let line7 =
+    "Commands that do not reset applied style are still useful."
+    <> "We can define some function that utilizes this feature. Like "
+    <> "`make_rainbow`" |> make_rainbow()
+    <> " It's a neat function!"
+  let line8 = "HI FROM ETCH! YAAAAAAAAAAAAAY!" |> make_rainbow()
+  stdout.execute([command.Println(line7), command.Println(line8)])
 }
 
 fn make_rainbow(s: String) -> String {
@@ -99,4 +68,5 @@ fn make_rainbow(s: String) -> String {
     }
   })
   |> string.join("")
+  |> reset_color()
 }
