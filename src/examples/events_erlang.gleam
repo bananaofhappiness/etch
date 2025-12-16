@@ -1,18 +1,27 @@
 //// This example shows how to handle user inputs and events.
 
+@target(erlang)
 import etch/command
+@target(erlang)
 import etch/cursor
+@target(erlang)
 import etch/event.{
   Char, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
 }
+@target(erlang)
 import etch/stdout
+@target(erlang)
 import etch/terminal
+@target(erlang)
 import gleam/int
+@target(erlang)
 import gleam/option.{None, Some}
 
+@target(erlang)
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
 
+@target(erlang)
 pub fn main() {
   stdout.execute([
     command.EnableMouseCapture,
@@ -35,11 +44,13 @@ pub fn main() {
   loop()
 }
 
+@target(erlang)
 fn loop() {
   handle_input()
   loop()
 }
 
+@target(erlang)
 fn handle_input() {
   // We call `event.read()` to wait for available input.
   // It blocks program execution until an event is received.
@@ -157,6 +168,7 @@ fn handle_input() {
 
 // Functions below are use to display events data, nothing interesting.
 
+@target(erlang)
 fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   let capslock = case key_event_state.capslock {
     True -> "Capslock "
@@ -173,6 +185,7 @@ fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   capslock <> keypad <> numlock
 }
 
+@target(erlang)
 fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   case key_event_kind {
     event.Press -> "Press"
@@ -181,6 +194,7 @@ fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   }
 }
 
+@target(erlang)
 fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   let shift = case modifiers.shift {
     True -> "Shift "
@@ -197,6 +211,7 @@ fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   shift <> control <> alt
 }
 
+@target(erlang)
 fn flags_to_string(
   l: List(event.KeyboardEnhancementFlag),
   acc: String,
@@ -217,6 +232,7 @@ fn flags_to_string(
   }
 }
 
+@target(erlang)
 fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   case kind {
     event.Down(button) -> "Pressed " <> button_to_string(button)
@@ -230,6 +246,7 @@ fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   }
 }
 
+@target(erlang)
 fn button_to_string(button: event.MouseButton) -> String {
   case button {
     event.Left -> "Left Mouse Button"

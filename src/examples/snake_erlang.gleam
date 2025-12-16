@@ -1,21 +1,35 @@
 //// Simple snake implementation.
 
+@target(erlang)
 import etch/command
+@target(erlang)
 import etch/event.{Char, DownArrow, Key, LeftArrow, RightArrow, UpArrow}
+@target(erlang)
 import etch/stdout
+@target(erlang)
 import etch/style
+@target(erlang)
 import etch/terminal
+@target(erlang)
 import gleam/dict.{type Dict}
+@target(erlang)
 import gleam/erlang/process
+@target(erlang)
 import gleam/int
+@target(erlang)
 import gleam/list
+@target(erlang)
 import gleam/option.{None, Some}
+@target(erlang)
 import gleam/string
+@target(erlang)
 import gleam/string_tree as stree
 
+@target(erlang)
 @external(erlang, "erlang", "halt")
 fn halt(n: Int) -> Nil
 
+@target(erlang)
 /// Direction of snake's movement.
 type Direction {
   Up
@@ -24,6 +38,7 @@ type Direction {
   Right
 }
 
+@target(erlang)
 /// State of the game.
 type State {
   State(
@@ -44,6 +59,7 @@ type State {
   )
 }
 
+@target(erlang)
 pub fn main() {
   stdout.execute([
     // enter raw mode to get inputs immediately
@@ -82,6 +98,7 @@ pub fn main() {
   loop(state)
 }
 
+@target(erlang)
 fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   let x =
     list.range(0, columns * rows)
@@ -94,6 +111,7 @@ fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   }
 }
 
+@target(erlang)
 fn loop(state: State) {
   // don't forget to add sleep in your loop.
   // not only it makes the game playable (snake doesnt move so fast)
@@ -107,6 +125,7 @@ fn loop(state: State) {
   loop(state)
 }
 
+@target(erlang)
 fn handle_input(state: State) -> State {
   // `poll(n)` waits n ms for an event. if there were no events, it returns None.
   case event.poll(1), state.direction {
@@ -141,6 +160,7 @@ fn handle_input(state: State) -> State {
   }
 }
 
+@target(erlang)
 fn update_state(state: State) -> State {
   case state.direction {
     Up -> move_up(state)
@@ -150,6 +170,7 @@ fn update_state(state: State) -> State {
   }
 }
 
+@target(erlang)
 fn move_right(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the right border, the game is over.
@@ -164,6 +185,7 @@ fn move_right(state: State) -> State {
   handle_new_head(state, new_head)
 }
 
+@target(erlang)
 fn move_down(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the lower border, the game is over.
@@ -178,6 +200,7 @@ fn move_down(state: State) -> State {
   handle_new_head(state, new_head)
 }
 
+@target(erlang)
 fn move_left(state: State) -> State {
   // if snake hits the left border, the game is over.
   // note that the terminal window is a larger than the playing area.
@@ -192,6 +215,7 @@ fn move_left(state: State) -> State {
   handle_new_head(state, new_head)
 }
 
+@target(erlang)
 fn move_up(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the upper border, the game is over.
@@ -206,6 +230,7 @@ fn move_up(state: State) -> State {
   handle_new_head(state, new_head)
 }
 
+@target(erlang)
 fn handle_new_head(state: State, new_head: Int) -> State {
   case dict.get(state.grid, new_head) {
     // if new head land on the snake's body, the game is over.
@@ -239,6 +264,7 @@ fn handle_new_head(state: State, new_head: Int) -> State {
   }
 }
 
+@target(erlang)
 fn spawn_fruit(state: State) -> State {
   // generate random value on the grid.
   let f = int.random(state.rows * state.columns)
@@ -254,6 +280,7 @@ fn spawn_fruit(state: State) -> State {
   }
 }
 
+@target(erlang)
 fn remove_last_snake_block(state: State, new_head: Int) -> State {
   // i don't know the better way to remove the last element of a list
   // but to reverse it and then use pattern matching to split it to last element an the rest
@@ -269,6 +296,7 @@ fn remove_last_snake_block(state: State, new_head: Int) -> State {
   State(..state, snake: snake, grid: grid)
 }
 
+@target(erlang)
 fn draw(state: State) {
   // convert dict to list and sort it. must be sorted so it prints correctly.
   let l = dict.to_list(state.grid)
@@ -339,12 +367,14 @@ fn draw(state: State) {
   stdout.flush(q)
 }
 
+@target(erlang)
 fn colorize(strings: List(String)) -> List(command.Command) {
   list.index_map(strings, fn(str, i) {
     command.Println(colorize_line(str, i % 2))
   })
 }
 
+@target(erlang)
 fn colorize_line(str: String, offset: Int) -> String {
   string.to_graphemes(str)
   |> list.index_map(fn(ch, i) {
@@ -364,6 +394,7 @@ fn colorize_line(str: String, offset: Int) -> String {
   |> string.join("")
 }
 
+@target(erlang)
 fn lose(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Lose", style.Red))
   process.sleep(2000)
@@ -371,6 +402,7 @@ fn lose(state: State) {
   halt(1)
 }
 
+@target(erlang)
 fn win(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Win", style.Green))
   process.sleep(2000)
@@ -378,6 +410,7 @@ fn win(state: State) {
   halt(0)
 }
 
+@target(erlang)
 fn print_centered_colored_block(
   state: State,
   s: String,

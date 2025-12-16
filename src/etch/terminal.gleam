@@ -20,13 +20,19 @@ pub type ClearType {
   UntilNewLine
 }
 
+@target(erlang)
 /// Enters raw mode.
 /// It is prefered not to use this directly. See [`EnterRaw`](command.html#EnterRaw).
 @external(erlang, "terminal_ffi", "enter_raw")
 pub fn enter_raw() -> Nil
 
+@target(javascript)
+@external(javascript, "../terminal/terminal_ffi.mjs", "enter_raw")
+pub fn enter_raw() -> Nil
+
 /// Returns current window size.
 @external(erlang, "terminal_ffi", "window_size")
+@external(javascript, "../terminal/terminal_ffi.mjs", "window_size")
 pub fn window_size() -> #(Int, Int)
 
 /// Clears the terminal. See [`ClearType`](terminal.html#ClearType).
