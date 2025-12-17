@@ -4,12 +4,19 @@
 
 import etch/command
 
+@target(javascript)
 import etch/event.{type Event, type EventError}
+@target(erlang)
+import etch/event
 import etch/stdout
 import etch/style
 import etch/terminal
+@target(javascript)
 import gleam/javascript/promise
+@target(javascript)
 import gleam/option.{type Option, None, Some}
+@target(erlang)
+import gleam/option.{None, Some}
 import gleam/string
 
 pub fn main() {

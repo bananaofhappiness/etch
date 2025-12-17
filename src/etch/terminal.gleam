@@ -21,14 +21,53 @@ pub type ClearType {
 }
 
 @target(erlang)
+@external(erlang, "terminal_ffi", "enter_raw")
+fn enter_raw_ffi() -> Nil
+
+@target(erlang)
+@external(erlang, "terminal_ffi", "exit_raw")
+fn exit_raw_ffi() -> Nil
+
+@target(erlang)
+@external(erlang, "tty_state", "init")
+@internal
+pub fn tty_state_init() -> Nil
+
+@target(erlang)
+@external(erlang, "tty_state", "set_raw")
+fn set_raw(is_raw: Bool) -> Nil
+
+@target(erlang)
+@external(erlang, "tty_state", "is_raw_mode")
+pub fn is_raw_mode() -> Bool
+
+@target(erlang)
 /// Enters raw mode.
 /// It is prefered not to use this directly. See [`EnterRaw`](command.html#EnterRaw).
-@external(erlang, "terminal_ffi", "enter_raw")
-pub fn enter_raw() -> Nil
+pub fn enter_raw() {
+  enter_raw_ffi()
+  set_raw(True)
+}
+
+@target(erlang)
+/// Exits raw mode.
+/// It is prefered not to use this directly. See [`EnterRaw`](command.html#EnterRaw).
+pub fn exit_raw() {
+  exit_raw_ffi()
+  set_raw(False)
+}
 
 @target(javascript)
 @external(javascript, "../terminal/terminal_ffi.mjs", "enter_raw")
 pub fn enter_raw() -> Nil
+
+@target(javascript)
+@external(javascript, "../terminal/terminal_ffi.mjs", "exit_raw")
+pub fn exit_raw() -> Nil
+
+@target(javascript)
+@external(javascript, "../terminal/terminal_ffi.mjs", "is_raw_mode")
+pub fn is_raw_mode() -> Bool
 
 /// Returns current window size.
 @external(erlang, "terminal_ffi", "window_size")

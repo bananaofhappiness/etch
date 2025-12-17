@@ -1,9 +1,12 @@
 -module(terminal_ffi).
 
--export([enter_raw/0, window_size/0]).
+-export([enter_raw/0, exit_raw/0, window_size/0]).
 
 enter_raw() ->
     shell:start_interactive({noshell, raw}).
+
+exit_raw() ->
+    shell:start_interactive(noshell).
 
 window_size() ->
     case io:columns() of

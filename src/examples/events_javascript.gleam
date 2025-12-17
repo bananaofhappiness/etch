@@ -20,6 +20,7 @@ import gleam/javascript/promise
 @target(javascript)
 import gleam/option.{type Option, None, Some}
 
+@target(javascript)
 @external(javascript, "./tools.js", "exit")
 fn exit(n: Int) -> Nil
 
@@ -144,9 +145,11 @@ fn handle_input(event: Option(Result(Event, EventError))) {
           Nil
         }
         Char("F") -> {
-          use _ <- promise.new()
-          case event.get_keyboard_enhancement_flags() {
+          use flags <- promise.await(event.get_keyboard_enhancement_flags())
+          promise.resolve(flags)
+          case flags {
             Ok(f) -> {
+              use _ <- promise.new()
               stdout.execute([
                 command.MoveTo(0, 0),
                 command.Clear(terminal.FromCursorDown),
@@ -157,6 +160,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
               ])
             }
             Error(event.FailedToParseEvent(e)) -> {
+              use _ <- promise.new()
               stdout.execute([
                 command.Println(e),
               ])

@@ -46,6 +46,12 @@ type Direction {
 }
 
 @target(javascript)
+type GameOver {
+  Win
+  Lose
+}
+
+@target(javascript)
 /// State of the game.
 type State {
   State(
@@ -63,6 +69,7 @@ type State {
     direction: Direction,
     /// Player's score.
     score: Int,
+    game_over: Option(GameOver),
   )
 }
 
@@ -99,6 +106,7 @@ pub fn main() {
       columns,
       Right,
       0,
+      None,
     )
   let state = spawn_fruit(state)
   event.init_event_server()
@@ -129,8 +137,14 @@ fn loop(state: State) {
   use event <- promise.await(event.poll(1))
   let state = handle_input(event, state)
   let state = update_state(state)
-  draw(state)
-  loop(state)
+  case state.game_over {
+    Some(Win) -> win(state)
+    Some(Lose) -> lose(state)
+    None -> {
+      draw(state)
+      loop(state)
+    }
+  }
 }
 
 @target(javascript)
@@ -183,12 +197,11 @@ fn move_right(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the right border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head {
+  let #(state, new_head) = case head {
     n if n % state.columns == state.columns - 1 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n + 1
+    n -> #(state, n + 1)
   }
   handle_new_head(state, new_head)
 }
@@ -198,12 +211,11 @@ fn move_down(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the lower border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head + state.columns {
+  let #(state, new_head) = case head + state.columns {
     n if n > state.columns * state.rows -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n
+    n -> #(state, n)
   }
   handle_new_head(state, new_head)
 }
@@ -213,12 +225,11 @@ fn move_left(state: State) -> State {
   // if snake hits the left border, the game is over.
   // note that the terminal window is a larger than the playing area.
   let assert Ok(head) = list.first(state.snake)
-  let new_head = case head {
+  let #(state, new_head) = case head {
     n if n % state.columns == 0 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n - 1
+    n -> #(state, n - 1)
   }
   handle_new_head(state, new_head)
 }
@@ -228,12 +239,11 @@ fn move_up(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the upper border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head - state.columns {
+  let #(state, new_head) = case head - state.columns {
     n if n < 0 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n
+    n -> #(state, n)
   }
   handle_new_head(state, new_head)
 }
@@ -243,8 +253,7 @@ fn handle_new_head(state: State, new_head: Int) -> State {
   case dict.get(state.grid, new_head) {
     // if new head land on the snake's body, the game is over.
     Ok(1) -> {
-      lose(state)
-      state
+      State(..state, game_over: Some(Lose))
     }
     // if new head land on a fruit
     Ok(2) -> {
@@ -252,12 +261,11 @@ fn handle_new_head(state: State, new_head: Int) -> State {
       let state = State(..state, score: state.score + 1)
       // if the snake covers the whole grid, player wins.
       // (we add 3 because we start with 3 body cells).
-      let _ = case state.score + 3 == state.rows * state.columns {
+      let state = case state.score + 3 == state.rows * state.columns {
         True -> {
-          win(state)
-          Nil
+          State(..state, game_over: Some(Win))
         }
-        False -> Nil
+        False -> state
       }
       // add new head to the snake making snake 1 cell larger.
       let snake = [new_head, ..state.snake]
@@ -265,7 +273,10 @@ fn handle_new_head(state: State, new_head: Int) -> State {
       let grid = dict.insert(state.grid, new_head, 1)
       // update state's grid and snake
       let state = State(..state, grid: grid, snake: snake)
-      spawn_fruit(state)
+      case state.game_over {
+        None -> spawn_fruit(state)
+        _ -> state
+      }
     }
     // otherwise just move the snake.
     Ok(0) -> {

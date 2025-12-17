@@ -38,8 +38,16 @@
 //// ```
 
 import etch/internal/consts.{csi}
+@target(erlang)
+import etch/terminal.{is_raw_mode, tty_state_init}
+@target(erlang)
+import gleam/erlang/process
 import gleam/int
+@target(erlang)
+import gleam/io
+@target(javascript)
 import gleam/javascript/array.{type Array}
+@target(javascript)
 import gleam/javascript/promise.{type Promise}
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -206,24 +214,36 @@ pub type Event {
 
 @target(erlang)
 @external(erlang, "io", "get_chars")
-pub fn get_chars(chars: String, n: Int) -> String
+pub fn get_chars(prompt: String, n: Int) -> String
+
+@target(erlang)
+@external(erlang, "io", "get_line")
+pub fn erlang_read(prompt: String) -> String
 
 @target(javascript)
 @external(javascript, "../input/input_ffi.mjs", "get_chars")
-pub fn get_chars(chars: String, n: Int) -> Promise(Array(Int))
+pub fn get_chars(_prompt: String, _n: Int) -> Promise(Array(Int))
 
 @target(erlang)
 @external(erlang, "event_ffi", "start_link")
 fn start_link() -> Nil
 
+@target(erlang)
 @external(erlang, "event_ffi", "push")
+fn push(event: Result(Event, EventError)) -> Nil
+
+@target(javascript)
 @external(javascript, "../input/input_ffi.mjs", "push")
 fn push(event: Result(Event, EventError)) -> Nil
 
+@target(erlang)
 /// Checks if there is an [`Event`](event.html#Event) available.
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](event.html#read).
 @external(erlang, "event_ffi", "poll")
+pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
+
+@target(javascript)
 @external(javascript, "../input/input_ffi.mjs", "poll")
 pub fn poll(timeout: Int) -> Promise(Option(Result(Event, EventError)))
 
@@ -238,24 +258,33 @@ pub fn read() -> Option(Result(Event, EventError))
 @external(javascript, "../input/input_ffi.mjs", "read")
 pub fn read() -> Promise(Option(Result(Event, EventError)))
 
+@target(javascript)
+@external(javascript, "../input/input_ffi.mjs", "handle_sigwinch")
+pub fn handle_sigwinch() -> Nil
+
 @target(erlang)
 /// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
   start_link()
+  tty_state_init()
   process.spawn(fn() { input_loop() })
 }
 
 @target(javascript)
 /// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
+  handle_sigwinch()
   input_loop()
 }
 
 @target(erlang)
 fn input_loop() {
-  let str = get_chars("", 1024)
+  let str = case is_raw_mode() {
+    True -> get_chars("", 128)
+    False -> erlang_read("")
+  }
   let str = string.to_graphemes(str)
-  let events = parse_events(str, "", [], False) |> list.reverse
+  let events = parse_events(str, "", [], False)
   push_events(events)
   input_loop()
 }
@@ -274,7 +303,7 @@ fn input_loop() {
         })
       string.from_utf_codepoints([code])
     })
-  let events = parse_events(bytes, "", [], False) |> list.reverse
+  let events = parse_events(bytes, "", [], False)
   push_events(events)
 
   input_loop()
@@ -809,37 +838,21 @@ pub fn get_keyboard_enhancement_flags() -> Result(
 }
 
 @target(javascript)
-pub fn get_keyboard_enhancement_flags() -> Result(
-  List(KeyboardEnhancementFlag),
-  EventError,
+@external(javascript, "../input/input_ffi.mjs", "get_keyboard_enhancement_flags_code")
+pub fn get_keyboard_enhancement_flags_code() -> Promise(
+  Result(String, EventError),
+)
+
+@target(javascript)
+pub fn get_keyboard_enhancement_flags() -> Promise(
+  Result(List(KeyboardEnhancementFlag), EventError),
 ) {
-  // io.print(csi <> "?u")
-  // let flags = get_chars("", 32) |> array.to_list()
-  let flags = []
-  case flags {
-    [27, 91, ..rest] -> {
-      case list.last(rest) {
-        //u
-        Ok(117) -> {
-          let s =
-            rest
-            |> list.map(fn(n) {
-              let code =
-                string.utf_codepoint(n)
-                |> result.lazy_unwrap(fn() {
-                  let assert Ok(fallback) = string.utf_codepoint(48)
-                  fallback
-                })
-              code
-            })
-            |> string.from_utf_codepoints()
-          Ok(parse_keyboard_enhancement_flags(s))
-        }
-        _ -> Error(FailedToParseEvent("Could not get enhancment flags"))
-      }
-    }
+  use flags <- promise.await(get_keyboard_enhancement_flags_code())
+  let res = case flags {
+    Ok(code) -> Ok(parse_keyboard_enhancement_flags(code))
     _ -> Error(FailedToParseEvent("Could not get enhancment flags"))
   }
+  promise.resolve(res)
 }
 
 @internal
