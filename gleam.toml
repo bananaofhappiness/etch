@@ -3,7 +3,7 @@ version = "1.2.0"
 description = "A Gleam TUI Backend Library"
 licences = ["MIT"]
 repository = { type = "github", user = "bananaofhappiness", repo = "etch" }
-target = "erlang"
+target = "javascript"
 
 internal_modules = [
   "etch/internal",
