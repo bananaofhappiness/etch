@@ -214,15 +214,15 @@ pub type Event {
 
 @target(erlang)
 @external(erlang, "io", "get_chars")
-pub fn get_chars(prompt: String, n: Int) -> String
+fn get_chars(prompt: String, n: Int) -> String
 
 @target(erlang)
 @external(erlang, "io", "get_line")
-pub fn erlang_read(prompt: String) -> String
+fn erlang_read(prompt: String) -> String
 
 @target(javascript)
 @external(javascript, "../input/input_ffi.mjs", "get_chars")
-pub fn get_chars(_prompt: String, _n: Int) -> Promise(Array(Int))
+fn get_chars(_prompt: String, _n: Int) -> Promise(Array(Int))
 
 @target(erlang)
 @external(erlang, "event_ffi", "start_link")
@@ -260,7 +260,7 @@ pub fn read() -> Promise(Option(Result(Event, EventError)))
 
 @target(javascript)
 @external(javascript, "../input/input_ffi.mjs", "handle_sigwinch")
-pub fn handle_sigwinch() -> Nil
+fn handle_sigwinch() -> Nil
 
 @target(erlang)
 /// Initializes the event server responsible for listening for events.

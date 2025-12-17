@@ -28,7 +28,7 @@ fn exit(n: Int) -> Nil
 pub fn main() {
   stdout.execute([
     command.EnableMouseCapture,
-    // Raw modeDisables terminal input/output processing so the program
+    // Raw mode disables terminal input/output processing so the program
     // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
     command.EnterRaw,
     command.Clear(terminal.All),
@@ -49,6 +49,7 @@ pub fn main() {
 
 @target(javascript)
 fn loop() {
+  // This is how you read events using JS target.
   use event <- promise.await(event.read())
   handle_input(event)
   loop()
@@ -56,12 +57,6 @@ fn loop() {
 
 @target(javascript)
 fn handle_input(event: Option(Result(Event, EventError))) {
-  // We call `event.read()` to wait for available input.
-  // It blocks program execution until an event is received.
-  // This is exactly what we need, because the project has no logic
-  // running constantly in the background. We only need to update the screen
-  // when its size changes.
-
   case event {
     // the rest of the code speaks for itself.
     Some(Ok(Mouse(m))) -> {

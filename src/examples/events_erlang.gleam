@@ -25,7 +25,7 @@ fn halt(n: Int) -> Nil
 pub fn main() {
   stdout.execute([
     command.EnableMouseCapture,
-    // Raw modeDisables terminal input/output processing so the program
+    // Raw mode disables terminal input/output processing so the program
     // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
     command.EnterRaw,
     command.Clear(terminal.All),

@@ -3,12 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.1.0] - 2025-12-12
+## [1.2.0] - 2025-12-18
 
 ### Fixes
-- Fixed that the color functions (such as `red`, `green`, `on_black`...) reset the both colors instead of just the corresponding one (foreground for colors and background for on_ functions).
+- Fixed events order in standard (non-raw) mode. Previously typing "hi" will return event of "i", and then of "h". Now the order is correct.
 
 ### Added
-- Added comments to the examples.
+- Added JavaScript target support.
+- Added `exit_raw` and `is_raw_mode` functions.
 
 ### Known Issues

@@ -95,12 +95,29 @@ gleam run -m examples/{example_name}
 For detailed API documentation, see the [documentation](https://hexdocs.pm/etch/) for the Etch package.
 
 ## Building and Shipping Your App
+See this awesome article: [Packaging a Gleam app into a single executable](https://www.dhzdhd.dev/blog/gleam-executable). In short, there are multiple ways to build your app into a single executable:
 
-To build the app into single executable:
+### JavaScript target
 
-1. **Add Etch and gleescript to your project**:
+#### **Bun**
+1. **Build your application**:
    ```sh
-   gleam add etch
+   gleam build
+   ```
+2. **Compile it using bun**
+  ```sh
+  bun build --compile --outfile=bundle build/dev/javascript/<project_name>/<project_name>.mjs --footer="main();" 
+  ```
+You will get an executable file in your project's root directory.
+
+#### **Node and Deno**
+Refer to the article above for more information.
+
+### Erlang target
+
+#### **Gleescript**
+1. **Add gleescript to your project**:
+   ```sh
    gleam add --dev gleescript
    ```
 
@@ -110,6 +127,37 @@ To build the app into single executable:
    gleam run -m gleescript
    ```
 You will get an executable file in your project's root directory. Users must have Erlang installed in order to run your executable.
+
+#### **Burrito**
+1. **Create new [mix](https://elixirschool.com/en/lessons/basics/mix/) project**
+  ```sh
+  mix new my_app
+  ```
+
+2. **Add [MixGleam](https://github.com/gleam-lang/mix_gleam) to your project**:
+   See [Installation](https://github.com/gleam-lang/mix_gleam#installation)
+ 
+3. **Add [Burrito](https://github.com/burrito-elixir/burrito)**:
+  See [Quick start](https://github.com/burrito-elixir/burrito#quick-start)
+
+4. **Add etch**
+  ```elixir
+  # in mix.exs
+  # ...
+    defp deps do
+      [
+        # ...
+        {:etch, "~> 1.2.0"},
+        # ...
+      ]
+    end
+  # ...
+  ```
+5. **Build your application**:
+   ```sh
+   mix
+   ```
+You will get an executable file in build directory. Unlike gleescript, burrito does not require Erlang to be installed to run your application.
 
 ## Contributing.
 
