@@ -3,10 +3,19 @@
 //// the background accordingly).
 
 import etch/command
+
+@target(javascript)
+import etch/event.{type Event, type EventError}
+@target(erlang)
 import etch/event
 import etch/stdout
 import etch/style
 import etch/terminal
+@target(javascript)
+import gleam/javascript/promise
+@target(javascript)
+import gleam/option.{type Option, None, Some}
+@target(erlang)
 import gleam/option.{None, Some}
 import gleam/string
 
@@ -21,11 +30,20 @@ pub fn main() {
   loop()
 }
 
+@target(erlang)
 fn loop() {
   handle_events()
   loop()
 }
 
+@target(javascript)
+fn loop() {
+  use event <- promise.await(event.read())
+  handle_events(event)
+  loop()
+}
+
+@target(erlang)
 fn handle_events() {
   // We call `event.read()` to wait for available input.
   // It blocks program execution until an event is received.
@@ -33,6 +51,23 @@ fn handle_events() {
   // running constantly in the background. We only need to update the screen
   // when its size changes.
   case event.read() {
+    // We only need to check for `Resize` event in this program.
+    Some(Ok(event.Resize(x, y))) -> {
+      draw_centered_text(x, y)
+    }
+    Some(_) -> Nil
+    None -> Nil
+  }
+}
+
+@target(javascript)
+fn handle_events(event: Option(Result(Event, EventError))) {
+  // We call `event.read()` to wait for available input.
+  // It blocks program execution until an event is received.
+  // This is exactly what we need, because the project has no logic
+  // running constantly in the background. We only need to update the screen
+  // when its size changes.
+  case event {
     // We only need to check for `Resize` event in this program.
     Some(Ok(event.Resize(x, y))) -> {
       draw_centered_text(x, y)

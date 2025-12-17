@@ -1,21 +1,42 @@
 //// Simple snake implementation.
 
+@target(javascript)
 import etch/command
-import etch/event.{Char, DownArrow, Key, LeftArrow, RightArrow, UpArrow}
+@target(javascript)
+import etch/event.{
+  type Event, type EventError, Char, DownArrow, Key, LeftArrow, RightArrow,
+  UpArrow,
+}
+@target(javascript)
 import etch/stdout
+@target(javascript)
 import etch/style
+@target(javascript)
 import etch/terminal
+@target(javascript)
 import gleam/dict.{type Dict}
-import gleam/erlang/process
+@target(javascript)
 import gleam/int
+@target(javascript)
+import gleam/javascript/promise.{type Promise}
+@target(javascript)
 import gleam/list
-import gleam/option.{None, Some}
+@target(javascript)
+import gleam/option.{type Option, None, Some}
+@target(javascript)
 import gleam/string
+@target(javascript)
 import gleam/string_tree as stree
 
-@external(erlang, "erlang", "halt")
-fn halt(n: Int) -> Nil
+@target(javascript)
+@external(javascript, "./tools.js", "exit")
+fn exit(n: Int) -> Nil
 
+@target(javascript)
+@external(javascript, "./tools.js", "sleep")
+fn sleep(n: Int) -> Promise(Nil)
+
+@target(javascript)
 /// Direction of snake's movement.
 type Direction {
   Up
@@ -24,6 +45,13 @@ type Direction {
   Right
 }
 
+@target(javascript)
+type GameOver {
+  Win
+  Lose
+}
+
+@target(javascript)
 /// State of the game.
 type State {
   State(
@@ -41,9 +69,11 @@ type State {
     direction: Direction,
     /// Player's score.
     score: Int,
+    game_over: Option(GameOver),
   )
 }
 
+@target(javascript)
 pub fn main() {
   stdout.execute([
     // enter raw mode to get inputs immediately
@@ -76,12 +106,14 @@ pub fn main() {
       columns,
       Right,
       0,
+      None,
     )
   let state = spawn_fruit(state)
   event.init_event_server()
   loop(state)
 }
 
+@target(javascript)
 fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   let x =
     list.range(0, columns * rows)
@@ -94,22 +126,31 @@ fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   }
 }
 
+@target(javascript)
 fn loop(state: State) {
   // don't forget to add sleep in your loop.
   // not only it makes the game playable (snake doesnt move so fast)
   // but also reduces CPU usage by a lot.
   // (constant loops with no latency between them are super expensive).
-  process.sleep(200)
+  use _ <- promise.await(sleep(200))
   // we handle input first and then update state accordingly.
-  let state = handle_input(state)
+  use event <- promise.await(event.poll(1))
+  let state = handle_input(event, state)
   let state = update_state(state)
-  draw(state)
-  loop(state)
+  case state.game_over {
+    Some(Win) -> win(state)
+    Some(Lose) -> lose(state)
+    None -> {
+      draw(state)
+      loop(state)
+    }
+  }
 }
 
-fn handle_input(state: State) -> State {
+@target(javascript)
+fn handle_input(event: Option(Result(Event, EventError)), state: State) -> State {
   // `poll(n)` waits n ms for an event. if there were no events, it returns None.
-  case event.poll(1), state.direction {
+  case event, state.direction {
     // if the snake is moving downwards and we press w or up arrow, do nothing.
     Some(Ok(Key(k))), Down if k.code == Char("w") || k.code == UpArrow -> state
     // otherwise change state's direction to Up
@@ -141,6 +182,7 @@ fn handle_input(state: State) -> State {
   }
 }
 
+@target(javascript)
 fn update_state(state: State) -> State {
   case state.direction {
     Up -> move_up(state)
@@ -150,68 +192,68 @@ fn update_state(state: State) -> State {
   }
 }
 
+@target(javascript)
 fn move_right(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the right border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head {
+  let #(state, new_head) = case head {
     n if n % state.columns == state.columns - 1 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n + 1
+    n -> #(state, n + 1)
   }
   handle_new_head(state, new_head)
 }
 
+@target(javascript)
 fn move_down(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the lower border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head + state.columns {
+  let #(state, new_head) = case head + state.columns {
     n if n > state.columns * state.rows -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n
+    n -> #(state, n)
   }
   handle_new_head(state, new_head)
 }
 
+@target(javascript)
 fn move_left(state: State) -> State {
   // if snake hits the left border, the game is over.
   // note that the terminal window is a larger than the playing area.
   let assert Ok(head) = list.first(state.snake)
-  let new_head = case head {
+  let #(state, new_head) = case head {
     n if n % state.columns == 0 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n - 1
+    n -> #(state, n - 1)
   }
   handle_new_head(state, new_head)
 }
 
+@target(javascript)
 fn move_up(state: State) -> State {
   let assert Ok(head) = list.first(state.snake)
   // if snake hits the upper border, the game is over.
   // note that the terminal window is a larger than the playing area.
-  let new_head = case head - state.columns {
+  let #(state, new_head) = case head - state.columns {
     n if n < 0 -> {
-      lose(state)
-      0
+      #(State(..state, game_over: Some(Lose)), 0)
     }
-    n -> n
+    n -> #(state, n)
   }
   handle_new_head(state, new_head)
 }
 
+@target(javascript)
 fn handle_new_head(state: State, new_head: Int) -> State {
   case dict.get(state.grid, new_head) {
     // if new head land on the snake's body, the game is over.
     Ok(1) -> {
-      lose(state)
-      state
+      State(..state, game_over: Some(Lose))
     }
     // if new head land on a fruit
     Ok(2) -> {
@@ -219,9 +261,11 @@ fn handle_new_head(state: State, new_head: Int) -> State {
       let state = State(..state, score: state.score + 1)
       // if the snake covers the whole grid, player wins.
       // (we add 3 because we start with 3 body cells).
-      let _ = case state.score + 3 == state.rows * state.columns {
-        True -> win(state)
-        False -> Nil
+      let state = case state.score + 3 == state.rows * state.columns {
+        True -> {
+          State(..state, game_over: Some(Win))
+        }
+        False -> state
       }
       // add new head to the snake making snake 1 cell larger.
       let snake = [new_head, ..state.snake]
@@ -229,7 +273,10 @@ fn handle_new_head(state: State, new_head: Int) -> State {
       let grid = dict.insert(state.grid, new_head, 1)
       // update state's grid and snake
       let state = State(..state, grid: grid, snake: snake)
-      spawn_fruit(state)
+      case state.game_over {
+        None -> spawn_fruit(state)
+        _ -> state
+      }
     }
     // otherwise just move the snake.
     Ok(0) -> {
@@ -239,6 +286,7 @@ fn handle_new_head(state: State, new_head: Int) -> State {
   }
 }
 
+@target(javascript)
 fn spawn_fruit(state: State) -> State {
   // generate random value on the grid.
   let f = int.random(state.rows * state.columns)
@@ -254,6 +302,7 @@ fn spawn_fruit(state: State) -> State {
   }
 }
 
+@target(javascript)
 fn remove_last_snake_block(state: State, new_head: Int) -> State {
   // i don't know the better way to remove the last element of a list
   // but to reverse it and then use pattern matching to split it to last element an the rest
@@ -269,6 +318,7 @@ fn remove_last_snake_block(state: State, new_head: Int) -> State {
   State(..state, snake: snake, grid: grid)
 }
 
+@target(javascript)
 fn draw(state: State) {
   // convert dict to list and sort it. must be sorted so it prints correctly.
   let l = dict.to_list(state.grid)
@@ -339,12 +389,14 @@ fn draw(state: State) {
   stdout.flush(q)
 }
 
+@target(javascript)
 fn colorize(strings: List(String)) -> List(command.Command) {
   list.index_map(strings, fn(str, i) {
     command.Println(colorize_line(str, i % 2))
   })
 }
 
+@target(javascript)
 fn colorize_line(str: String, offset: Int) -> String {
   string.to_graphemes(str)
   |> list.index_map(fn(ch, i) {
@@ -364,30 +416,23 @@ fn colorize_line(str: String, offset: Int) -> String {
   |> string.join("")
 }
 
+@target(javascript)
 fn lose(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Lose", style.Red))
-  process.sleep(2000)
-  // make sure to leave alternate screen and enable line wrap again.
-  stdout.execute([
-    command.Clear(terminal.All),
-    command.LeaveAlternateScreen,
-    command.EnableLineWrap,
-  ])
-  halt(1)
+  use _ <- promise.tap(sleep(2000))
+  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
+  exit(1)
 }
 
+@target(javascript)
 fn win(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Win", style.Green))
-  process.sleep(2000)
-  // make sure to leave alternate screen and enable line wrap again.
-  stdout.execute([
-    command.Clear(terminal.All),
-    command.LeaveAlternateScreen,
-    command.EnableLineWrap,
-  ])
-  halt(0)
+  use _ <- promise.tap(sleep(2000))
+  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
+  exit(0)
 }
 
+@target(javascript)
 fn print_centered_colored_block(
   state: State,
   s: String,

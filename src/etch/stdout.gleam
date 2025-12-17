@@ -134,15 +134,10 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, append(tree, disable_focus_change()))
     [EnableFocusChange, ..rest] ->
       flush_inner(rest, append(tree, enable_focus_change()))
-
-    // TODO: KeyboardEnhancementFlags
-    // [PushKeyboardEnhancementFlags(_), ..rest] -> flush_inner(rest, tree)
-    // [PopKeyboardEnhancementFlags, ..rest] -> flush_inner(rest, tree)
     [PushKeyboardEnhancementFlags(f), ..rest] ->
       flush_inner(rest, append(tree, push_keyboard_enhancement_flags(f)))
     [PopKeyboardEnhancementFlags, ..rest] ->
       flush_inner(rest, tree |> append(pop_keyboard_enhancement_flags()))
-
     // style
     [SetForegroundColor(c), ..rest] ->
       flush_inner(rest, append(tree, with("", c)))
