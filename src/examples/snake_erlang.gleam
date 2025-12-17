@@ -398,7 +398,12 @@ fn colorize_line(str: String, offset: Int) -> String {
 fn lose(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Lose", style.Red))
   process.sleep(2000)
-  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
+  // make sure to leave alternate screen and enable line wrap again.
+  stdout.execute([
+    command.Clear(terminal.All),
+    command.LeaveAlternateScreen,
+    command.EnableLineWrap,
+  ])
   halt(1)
 }
 
@@ -406,7 +411,12 @@ fn lose(state: State) {
 fn win(state: State) {
   stdout.execute(print_centered_colored_block(state, "You Win", style.Green))
   process.sleep(2000)
-  stdout.execute([command.Clear(terminal.All), command.LeaveAlternateScreen])
+  // make sure to leave alternate screen and enable line wrap again.
+  stdout.execute([
+    command.Clear(terminal.All),
+    command.LeaveAlternateScreen,
+    command.EnableLineWrap,
+  ])
   halt(0)
 }
 

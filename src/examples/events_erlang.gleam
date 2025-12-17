@@ -104,7 +104,16 @@ fn handle_input() {
       ])
     Some(Ok(Key(s))) -> {
       case s.code {
-        Char("Q") -> halt(0)
+        Char("Q") -> {
+          stdout.execute([
+            command.DisableMouseCapture,
+            command.Clear(terminal.All),
+            command.SetCursorStyle(cursor.SteadyBar),
+            command.DisableFocusChange,
+            command.PopKeyboardEnhancementFlags,
+          ])
+          halt(0)
+        }
         Char("R") if s.kind == event.Press -> {
           case event.get_cursor_position() {
             Ok(#(x, y)) -> {
