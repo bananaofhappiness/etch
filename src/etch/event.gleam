@@ -479,9 +479,9 @@ pub fn handle_escape_code(s: String) -> Result(Event, EventError) {
 
 @target(erlang)
 /// Returns cursor position.
-/// Do not call this in a loop. You still can call it in a loop, if some condition is true
-/// (like when user pressed a key you return the position), but don't call it
-/// every loop iteration.
+/// This function shouldn't be called in a tight loop. It's fine to call it when
+/// responding to specific user input (e.g., after a key press), but avoid calling
+/// it on every loop iteration.
 pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
   io.print(csi <> "6n")
   let pos = get_chars("", 32)
@@ -818,8 +818,9 @@ pub fn starts_with_number(s: String) -> Bool {
 
 @target(erlang)
 /// Get keyboard enhancement flags. See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
-/// Be careful when calling this function inside a loop where you are also listening for events.
-/// Some events may be lost.
+/// This function shouldn't be called in a tight loop. It's fine to call it when
+/// responding to specific user input (e.g., after a key press), but avoid calling
+/// it on every loop iteration.
 pub fn get_keyboard_enhancement_flags() -> Result(
   List(KeyboardEnhancementFlag),
   EventError,

@@ -95,6 +95,7 @@ gleam run -m examples/{example_name}
 For detailed API documentation, see the [documentation](https://hexdocs.pm/etch/) for the Etch package.
 
 ## Building and Shipping Your App
+Before building your application I suggest you to look at the [benchmarks](https://github.com/bananaofhappiness/etch/blob/main/benchmarks/README.md)
 See this awesome article: [Packaging a Gleam app into a single executable](https://www.dhzdhd.dev/blog/gleam-executable). In short, there are multiple ways to build your app into a single executable:
 
 ### JavaScript target
