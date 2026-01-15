@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Fixes
 
 ### Added
+- Placeholder for `gleam publish` to not complain about empty module.
 - Removed `gleescript` from dependencies.
 - Added benchmarks.
 

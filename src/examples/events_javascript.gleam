@@ -24,6 +24,11 @@ import gleam/option.{type Option, None, Some}
 @external(javascript, "./tools.js", "exit")
 fn exit(n: Int) -> Nil
 
+@target(erlang)
+pub fn main() {
+  panic as "This is a placeholder so that `gleam publish` does not complain about empty module."
+}
+
 @target(javascript)
 pub fn main() {
   stdout.execute([

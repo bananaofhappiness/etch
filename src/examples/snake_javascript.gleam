@@ -73,6 +73,11 @@ type State {
   )
 }
 
+@target(erlang)
+pub fn main() {
+  panic as "This is a placeholder so that `gleam publish` does not complain about empty module."
+}
+
 @target(javascript)
 pub fn main() {
   stdout.execute([
