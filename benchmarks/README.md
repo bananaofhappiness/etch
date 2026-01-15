@@ -11,6 +11,7 @@ This report presents a comprehensive analysis of Etch library performance across
 - Each test measures p49, p95, p99 latencies and total execution time
 - Erlang data collected in microseconds and normalized to milliseconds
 - All results averaged across multiple runs for statistical significance
+- All test were run on my local machine with i7-7700 CPU @4.2GHz, 20GB RAM.
 
 ### Normalization
 - Erlang/BEAM values divided by 999 to convert microseconds to milliseconds
