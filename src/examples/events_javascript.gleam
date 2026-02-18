@@ -123,6 +123,13 @@ fn handle_input(event: Option(Result(Event, EventError))) {
       case s.code {
         Esc -> {
           use _ <- promise.new()
+          stdout.execute([
+            command.DisableMouseCapture,
+            command.Clear(terminal.All),
+            command.SetCursorStyle(cursor.SteadyBar),
+            command.DisableFocusChange,
+            command.PopKeyboardEnhancementFlags,
+          ])
           exit(0)
         }
         Char("R") if s.kind == event.Press -> {
@@ -184,11 +191,6 @@ fn handle_input(event: Option(Result(Event, EventError))) {
             command.Println("State: " <> key_event_state_to_string(s.state)),
             command.Println("Text: " <> s.text),
           ])
-          stdout.execute([
-            command.Println("\nDebug information:"),
-          ])
-          echo event
-          Nil
         }
       }
     }

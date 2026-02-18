@@ -19,7 +19,7 @@ import gleam/option.{None, Some}
 
 @target(erlang)
 @external(erlang, "erlang", "halt")
-fn halt(n: Int) -> Nil
+fn exit(n: Int) -> Nil
 
 @target(javascript)
 pub fn main() {
@@ -115,7 +115,7 @@ fn handle_input() {
             command.DisableFocusChange,
             command.PopKeyboardEnhancementFlags,
           ])
-          halt(0)
+          exit(0)
         }
         Char("R") if s.kind == event.Press -> {
           case event.get_cursor_position() {
@@ -165,11 +165,6 @@ fn handle_input() {
             command.Println("State: " <> key_event_state_to_string(s.state)),
             command.Println("Text: " <> s.text),
           ])
-          stdout.execute([
-            command.Println("\nDebug information:"),
-          ])
-          echo event
-          Nil
         }
       }
     }
