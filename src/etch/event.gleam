@@ -352,12 +352,27 @@ pub fn parse_events(
       }
     }
     [s, ..rest], False -> {
-      let list_acc = [Ok(Key(default_key_event(Char(s)))), ..list_acc]
+      let list_acc = [
+        Ok(Key(default_key_event(char_to_key_code(s)))),
+        ..list_acc
+      ]
       parse_events(rest, esc_acc <> s, list_acc, False)
     }
     [], _ -> {
       list.reverse(list_acc)
     }
+  }
+}
+
+fn char_to_key_code(char: String) -> KeyCode {
+  case char {
+    "\r" -> Enter
+    "\n" -> Enter
+    "\u{001b}" -> Esc
+    "\u{007f}" -> Backspace
+    "\u{0008}" -> Backspace
+    "\t" -> Tab
+    _ -> Char(char)
   }
 }
 
@@ -540,11 +555,13 @@ pub fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
 
   let code_parts = string.split(code, ":")
   let res = case code_parts {
-    [unicode, alternate_code] -> Ok(#(unicode, Some(alternate_code)))
-    [unicode] -> Ok(#(unicode, None))
+    [unicode, alternate_code, base_layout_key] ->
+      Ok(#(unicode, Some(alternate_code), Some(base_layout_key)))
+    [unicode, alternate_code] -> Ok(#(unicode, Some(alternate_code), None))
+    [unicode] -> Ok(#(unicode, None, None))
     _ -> Error(FailedToParseEvent("Failed to parse u encoded code"))
   }
-  use #(code, alternate_code) <- try(res)
+  use #(code, alternate_code, _base_layout_key) <- try(res)
 
   use #(modifier_mask, kind_mask) <- try(parse_modifier_and_kind(modifiers))
   let #(modifiers, kind, state_from_modifier) = #(
@@ -566,7 +583,8 @@ pub fn parse_u_encoded_key_code(code: String) -> Result(Event, EventError) {
         "\r" -> Enter
         "\n" -> Enter
         "\u{001b}" -> Esc
-        "\u{0007}" -> Backspace
+        "\u{007f}" -> Backspace
+        "\u{0008}" -> Backspace
         "\t" if modifiers.shift -> Backtab
         "\t" -> Tab
         c -> Char(c)

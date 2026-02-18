@@ -13,10 +13,10 @@ window_size() ->
         {ok, Cols} ->
             case io:rows() of
                 {ok, Rows} ->
-                    {Cols, Rows};
+                    {ok, {Cols, Rows}};
                 _ ->
-                    error
+                    {error, could_not_get_window_size}
             end;
         _ ->
-            error
+            {error, could_not_get_window_size}
     end.

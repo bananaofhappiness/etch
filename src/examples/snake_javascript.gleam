@@ -24,6 +24,8 @@ import gleam/list
 @target(javascript)
 import gleam/option.{type Option, None, Some}
 @target(javascript)
+import gleam/result
+@target(javascript)
 import gleam/string
 @target(javascript)
 import gleam/string_tree as stree
@@ -80,9 +82,18 @@ pub fn main() {
 
 @target(javascript)
 pub fn main() {
+  // Raw mode disables terminal input/output processing so the program
+  // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
+  let _ = case terminal.enter_raw() {
+    Ok(_) -> {
+      Nil
+    }
+    Error(_) -> {
+      stdout.execute([command.Print("Could not enter raw mode, exiting")])
+      exit(1)
+    }
+  }
   stdout.execute([
-    // enter raw mode to get inputs immediately
-    command.EnterRaw,
     // enter alternate screeen to not affect main buffer.
     command.EnterAlternateScreen,
     command.Clear(terminal.All),
@@ -90,7 +101,7 @@ pub fn main() {
     command.DisableLineWrap,
   ])
 
-  let #(columns, rows) = terminal.window_size()
+  let #(columns, rows) = terminal.window_size() |> result.unwrap(#(2, 2))
   // game's grid is a bit smaller than the terminal window because we have borders too.
   // upper and lower borders take 2 tiles from upper and lower parts of the terminal,
   // so do right and left. so we substract 2.

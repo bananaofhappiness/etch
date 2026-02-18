@@ -6,8 +6,8 @@ import etch/command
 import etch/cursor
 @target(javascript)
 import etch/event.{
-  type Event, type EventError, Char, FocusGained, FocusLost, Key, Mouse, Resize,
-  init_event_server,
+  type Event, type EventError, Char, Esc, FocusGained, FocusLost, Key, Mouse,
+  Resize, init_event_server,
 }
 @target(javascript)
 import etch/stdout
@@ -31,11 +31,19 @@ pub fn main() {
 
 @target(javascript)
 pub fn main() {
+  // Raw mode disables terminal input/output processing so the program
+  // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
+  let _ = case terminal.enter_raw() {
+    Ok(_) -> {
+      Nil
+    }
+    Error(_) -> {
+      stdout.execute([command.Print("Could not enter raw mode, exiting")])
+      exit(1)
+    }
+  }
   stdout.execute([
     command.EnableMouseCapture,
-    // Raw mode disables terminal input/output processing so the program
-    // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-    command.EnterRaw,
     command.Clear(terminal.All),
     command.SetCursorStyle(cursor.SteadyBar),
     command.EnableFocusChange,
@@ -61,6 +69,11 @@ fn loop() {
 }
 
 @target(javascript)
+const default_text = "Press Escape to exit
+Press R to get current cursor position
+Press F to get keyboard enhancement flags\n"
+
+@target(javascript)
 fn handle_input(event: Option(Result(Event, EventError))) {
   case event {
     // the rest of the code speaks for itself.
@@ -69,9 +82,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position"),
-        command.Println("Press F to get keyboard enhancement flags\n"),
+        command.Println(default_text),
         command.Println("Got mouse event"),
         command.Println("Kind: " <> mouse_event_kind_to_string(m.kind)),
         command.Println("Row: " <> int.to_string(m.row)),
@@ -84,9 +95,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position"),
-        command.Println("Press F to get keyboard enhancement flags\n"),
+        command.Println(default_text),
         command.Println("Window resized. Current size: "),
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
@@ -97,9 +106,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position"),
-        command.Println("Press F to get keyboard enhancement flags\n"),
+        command.Println(default_text),
         command.Println("Focus gained."),
       ])
     }
@@ -108,15 +115,13 @@ fn handle_input(event: Option(Result(Event, EventError))) {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println("Press Q to exit"),
-        command.Println("Press R to get current cursor position"),
-        command.Println("Press F to get keyboard enhancement flags\n"),
+        command.Println(default_text),
         command.Println("Focus lost."),
       ])
     }
     Some(Ok(Key(s))) -> {
       case s.code {
-        Char("Q") -> {
+        Esc -> {
           use _ <- promise.new()
           exit(0)
         }
@@ -153,9 +158,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
               stdout.execute([
                 command.MoveTo(0, 0),
                 command.Clear(terminal.FromCursorDown),
-                command.Println("Press Q to exit"),
-                command.Println("Press R to get current cursor position"),
-                command.Println("Press F to get keyboard enhancement flags\n"),
+                command.Println(default_text),
                 command.Println("Flags: " <> flags_to_string(f, "")),
               ])
             }
@@ -172,9 +175,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
           stdout.execute([
             command.MoveTo(0, 0),
             command.Clear(terminal.FromCursorDown),
-            command.Println("Press Q to exit"),
-            command.Println("Press R to get current cursor position"),
-            command.Println("Press F to get keyboard enhancement flags\n"),
+            command.Println(default_text),
             command.Println(
               "Got key event: \"" <> event.to_string(s.code) <> "\"",
             ),
@@ -183,6 +184,11 @@ fn handle_input(event: Option(Result(Event, EventError))) {
             command.Println("State: " <> key_event_state_to_string(s.state)),
             command.Println("Text: " <> s.text),
           ])
+          stdout.execute([
+            command.Println("\nDebug information:"),
+          ])
+          echo event
+          Nil
         }
       }
     }

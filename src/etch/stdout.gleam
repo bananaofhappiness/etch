@@ -15,8 +15,8 @@
 import etch/command.{
   type Command, Clear, DisableFocusChange, DisableLineWrap, DisableMouseCapture,
   EnableFocusChange, EnableLineWrap, EnableMouseCapture, EnterAlternateScreen,
-  EnterRaw, HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight,
-  MoveTo, MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
+  HideCursor, LeaveAlternateScreen, MoveDown, MoveLeft, MoveRight, MoveTo,
+  MoveToColumn, MoveToNextLine, MoveToPreviousLine, MoveToRow, MoveUp,
   PopKeyboardEnhancementFlags, Print, PrintReset, Println, PrintlnReset,
   PushKeyboardEnhancementFlags, ResetAttributes, ResetBackground, ResetColor,
   ResetForeground, ResetStyle, RestorePosition, SavePosition, ScrollDown,
@@ -40,8 +40,8 @@ import etch/style.{
   reset_foreground, reset_style, set_style, with, with_on,
 }
 import etch/terminal.{
-  disable_line_wrap, enable_line_wrap, enter_alternative, enter_raw,
-  leave_alternative, scroll_down, scroll_up, set_size, set_title,
+  disable_line_wrap, enable_line_wrap, enter_alternative, leave_alternative,
+  scroll_down, scroll_up, set_size, set_title,
 }
 import gleam/io
 import gleam/list
@@ -116,10 +116,6 @@ fn flush_inner(commands: List(Command), tree: StringTree) -> Nil {
       flush_inner(rest, append(tree, enable_line_wrap()))
     [DisableLineWrap, ..rest] ->
       flush_inner(rest, append(tree, disable_line_wrap()))
-    [EnterRaw, ..rest] -> {
-      enter_raw()
-      flush_inner(rest, tree)
-    }
     [EnterAlternateScreen, ..rest] ->
       flush_inner(rest, append(tree, enter_alternative()))
     [LeaveAlternateScreen, ..rest] ->

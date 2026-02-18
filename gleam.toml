@@ -1,5 +1,5 @@
 name = "etch"
-version = "1.2.1"
+version = "1.3.0"
 description = "A Gleam TUI Backend Library"
 licences = ["MIT"]
 repository = { type = "github", user = "bananaofhappiness", repo = "etch" }

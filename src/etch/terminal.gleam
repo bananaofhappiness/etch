@@ -20,6 +20,13 @@ pub type ClearType {
   UntilNewLine
 }
 
+/// Event error.
+pub type TerminalError {
+  FailedToEnterRawMode
+  FailedToExitRawMode
+  CouldNotGetWindowSize
+}
+
 @target(erlang)
 @external(erlang, "terminal_ffi", "enter_raw")
 fn enter_raw_ffi() -> Nil
@@ -43,7 +50,6 @@ pub fn is_raw_mode() -> Bool
 
 @target(erlang)
 /// Enters raw mode.
-/// It is prefered not to use this directly. See [`EnterRaw`](command.html#EnterRaw).
 pub fn enter_raw() {
   enter_raw_ffi()
   set_raw(True)
@@ -51,7 +57,6 @@ pub fn enter_raw() {
 
 @target(erlang)
 /// Exits raw mode.
-/// It is prefered not to use this directly. See [`EnterRaw`](command.html#EnterRaw).
 pub fn exit_raw() {
   exit_raw_ffi()
   set_raw(False)
@@ -59,11 +64,11 @@ pub fn exit_raw() {
 
 @target(javascript)
 @external(javascript, "../terminal/terminal_ffi.mjs", "enter_raw")
-pub fn enter_raw() -> Nil
+pub fn enter_raw() -> Result(Nil, TerminalError)
 
 @target(javascript)
 @external(javascript, "../terminal/terminal_ffi.mjs", "exit_raw")
-pub fn exit_raw() -> Nil
+pub fn exit_raw() -> Result(Nil, TerminalError)
 
 @target(javascript)
 @external(javascript, "../terminal/terminal_ffi.mjs", "is_raw_mode")
@@ -72,7 +77,7 @@ pub fn is_raw_mode() -> Bool
 /// Returns current window size.
 @external(erlang, "terminal_ffi", "window_size")
 @external(javascript, "../terminal/terminal_ffi.mjs", "window_size")
-pub fn window_size() -> #(Int, Int)
+pub fn window_size() -> Result(#(Int, Int), TerminalError)
 
 /// Clears the terminal. See [`ClearType`](terminal.html#ClearType).
 /// It is prefered not to use this directly. See [`Clear`](command.html#Clear).

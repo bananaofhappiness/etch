@@ -3,6 +3,7 @@
 //// the background accordingly).
 
 import etch/command
+import gleam/result
 
 @target(javascript)
 import etch/event.{type Event, type EventError}
@@ -23,7 +24,7 @@ pub fn main() {
   // First, we hide cursors
   stdout.execute([command.HideCursor])
   // We get windows size so we can center our rainbow background
-  let #(x, y) = terminal.window_size()
+  let #(x, y) = terminal.window_size() |> result.unwrap(#(0, 0))
   draw_centered_text(x, y)
   // make sure to init event server before listening to events.
   event.init_event_server()

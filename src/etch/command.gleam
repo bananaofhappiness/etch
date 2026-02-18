@@ -81,8 +81,6 @@ pub type Command {
   DisableLineWrap
   /// Enables line wrap.
   EnableLineWrap
-  /// Enters raw mode.
-  EnterRaw
   /// Enters the alternate screen. Working in the alternate screen
   /// will not affect the main screen buffer. A good example of using an
   /// alternate screen is Vim.

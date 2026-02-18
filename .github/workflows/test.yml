@@ -13,11 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           otp-version: "27.1.2"
           gleam-version: "1.12.0"
           rebar3-version: "3"
           # elixir-version: "1"
       - run: gleam deps download
-      - run: gleam test
+      - run: gleam test --target erlang
+      - run: gleam test --target javascript --runtime node
+      - run: gleam test --target javascript --runtime deno
+      - run: gleam test --target javascript --runtime bun
       - run: gleam format --check src test
