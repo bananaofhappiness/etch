@@ -6,16 +6,12 @@ import etch/command
 import gleam/result
 
 import etch/event.{type Event, type EventError}
-@target(erlang)
-import etch/event
 import etch/stdout
 import etch/style
 import etch/terminal
 @target(javascript)
 import gleam/javascript/promise
 import gleam/option.{type Option, None, Some}
-@target(erlang)
-import gleam/option.{None, Some}
 import gleam/string
 
 pub fn main() {
