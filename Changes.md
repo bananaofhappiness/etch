@@ -14,3 +14,4 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Updated style documentation.
+- DRY: Unified `handle_events` function in examples/hello_world so both JavaScript and Erlang targets use the same implementation.
