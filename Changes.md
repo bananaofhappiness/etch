@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.3.2] - 2026-02-28
+## [1.3.1] - 2026-02-28
 
 ### Fixes
 - Fixed crash after receiving SIGWINCH (window resize signal).
