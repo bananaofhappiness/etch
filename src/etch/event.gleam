@@ -4,9 +4,7 @@
 //// must be called at the start of the application. See `events` example.
 //// ```gleam
 //// pub fn main()
-////   stdout.execute([
-////     command.EnterRaw,
-////   ])
+////   terminal.enter_raw()
 ////   init_event_server()
 ////   loop()
 ////

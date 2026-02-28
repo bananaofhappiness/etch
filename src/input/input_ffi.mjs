@@ -181,7 +181,12 @@ export function get_keyboard_enhancement_flags_code() {
 
 export function handle_sigwinch() {
   process.on("SIGWINCH", () => {
-    const [columns, rows] = window_size();
-    push(new Ok(new Resize(columns, rows)));
+    const size = window_size();
+    if (size instanceof Ok) {
+      const [columns, rows] = size["0"];
+      push(new Ok(new Resize(columns, rows)));
+    } else {
+      push(new Error(new CouldNotGetWindowSize()));
+    }
   });
 }

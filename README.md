@@ -58,8 +58,8 @@ import etch/stdout.{type Queue, execute, flush, queue}
 
 pub fn main() {
   // Use execute to execute `Commands`
+  terminal.enter_raw()
   execute([
-    command.EnterRaw,
     command.EnterAlternateScreen,
     command.HideCursor,
     command.Clear(terminal.All)

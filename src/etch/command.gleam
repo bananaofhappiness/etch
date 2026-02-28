@@ -4,7 +4,6 @@
 ////
 //// let q = Queue([])
 //// queue(q, [
-////   EnterRaw,
 ////   EnterAlternativeScreen,
 ////   HideCursor,
 ////   Println("Hello from Etch"),

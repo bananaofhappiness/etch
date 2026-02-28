@@ -3,15 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.3.0] - 2026-02-18
+## [1.3.2] - 2026-02-28
 
 ### Fixes
-- Fixed parsing of special key codes (Enter, Backspace, Tab, Esc) in `parse_events`
+- Fixed crash after receiving SIGWINCH (window resize signal).
 
 ### Changed
-- **BREAKING**: Removed `EnterRaw` command from `etch/command`. Use `terminal.enter_raw()` directly instead
-- **BREAKING**:  `terminal.window_size()` now returns `Result`. `terminal.enter_raw()` and `terminal.exit_raw()` return `Result` on JavaScript target.
-- Added `TerminalError` type with `FailedToEnterRawMode`, `FailedToExitRawMode`, and `CouldNotGetWindowSize` variants
-- CI now tests JavaScript target with Node, Deno, and Bun runtimes
-
-### Known Issues
+- Moved `examples/` directory to `dev/`.
+- Updated documentation to match current API - removed or replaced all references to `command.EnterRaw` with `terminal.enter_raw()`.
