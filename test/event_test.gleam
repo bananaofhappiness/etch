@@ -390,8 +390,8 @@ pub fn parse_normal_mouse_test() {
     Ok(
       Mouse(MouseEvent(
         Down(Right),
+        0,
         1,
-        2,
         Modifiers(
           shift: False,
           alt: False,
@@ -412,8 +412,8 @@ pub fn parse_sgr_mouse_test() {
     Ok(
       Mouse(MouseEvent(
         Up(Middle),
-        10,
-        20,
+        9,
+        19,
         Modifiers(
           shift: False,
           alt: True,
