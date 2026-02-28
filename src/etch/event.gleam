@@ -819,12 +819,15 @@ pub fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
 
   let column = int.parse(column) |> result.unwrap(0)
   let row = int.parse(row) |> result.unwrap(0)
-  let column = column - 1
-  let row = row - 1
 
   use #(modifiers, kind) <- try(parse_cb(code))
   Ok(
-    Mouse(MouseEvent(kind: kind, modifiers: modifiers, column: column, row: row)),
+    Mouse(MouseEvent(
+      kind: kind,
+      modifiers: modifiers,
+      column: column - 1,
+      row: row - 1,
+    )),
   )
 }
 
@@ -1018,7 +1021,12 @@ pub fn parse_normal_mouse(code: String) -> Result(Event, EventError) {
   use #(modifiers, kind) <- try(parse_cb(cb))
 
   Ok(
-    Mouse(MouseEvent(kind: kind, modifiers: modifiers, column: column, row: row)),
+    Mouse(MouseEvent(
+      kind: kind,
+      modifiers: modifiers,
+      column: column - 1,
+      row: row - 1,
+    )),
   )
 }
 
@@ -1048,7 +1056,12 @@ pub fn parse_sgr_mouse(s: String) -> Result(Event, EventError) {
   }
 
   Ok(
-    Mouse(MouseEvent(kind: kind, modifiers: modifiers, column: column, row: row)),
+    Mouse(MouseEvent(
+      kind: kind,
+      modifiers: modifiers,
+      column: column - 1,
+      row: row - 1,
+    )),
   )
 }
 

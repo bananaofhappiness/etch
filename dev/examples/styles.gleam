@@ -11,16 +11,14 @@ pub fn main() {
   stdout.execute([command.Clear(terminal.All), command.MoveTo(0, 0)])
   let line1 = "This example shows how to apply some style to a text."
   let line2 =
-    "We can use"
-    <> "`with`" |> with(style.BrightRed)
-    <> ","
-    <> "`on`" |> on(style.BrightGreen)
-    <> "and "
-    <> "`with_on`." |> with_on(style.Magenta, style.BrightYellow)
+    "We can use "
+    <> "`with` to set a foreground color, " |> with(style.BrightRed)
+    <> "`on` to set a background color and " |> on(style.Cyan)
+    <> "`with_on` to set both." |> with_on(style.Magenta, style.BrightYellow)
   let line3 =
     "(Note that if you want to set both foreground and background, `with_on` is slightly faster than `with` and `on`)."
   let line4 =
-    "And we can also apply attributes using `attributes`. This line is bold, italic and with inversed colors."
+    "And we can also apply attributes using `attributes`. This line is bold, italic and with inversed colors.\n"
     |> attributes([style.Bold, style.Italic, style.Inverse])
 
   stdout.execute([
@@ -31,7 +29,7 @@ pub fn main() {
   ])
 
   let line5 =
-    "As you can see, none of these functions reset colors or attributes. To reset it, we called PrintlnReset command at the previous line."
+    "As you can see, none of these functions reset colors or attributes. To reset it, we called `PrintlnReset` command at the previous line."
   stdout.execute([command.Println(line5)])
   let line6 =
     "If we call commands like "
@@ -40,7 +38,7 @@ pub fn main() {
     <> "`on_green`" |> on_green()
     <> ", "
     <> "`underline`" |> underline()
-    <> ", they reset their color/attribute after calling them."
+    <> ", they reset their color/attribute after calling them.\n"
   stdout.execute([command.Println(line6)])
 
   let line7 =
@@ -48,8 +46,25 @@ pub fn main() {
     <> "We can define some function that utilizes this feature. Like "
     <> "`make_rainbow`" |> make_rainbow()
     <> " It's a neat function!"
-  let line8 = "HI FROM ETCH! YAAAAAAAAAAAAAY!" |> make_rainbow()
-  stdout.execute([command.Println(line7), command.Println(line8)])
+  let line8 = "HI FROM ETCH! YAAAAAAAAAAAAAY!\n" |> make_rainbow()
+  stdout.execute([
+    command.Println(line7),
+    command.Println(line8),
+  ])
+
+  let line9 =
+    "You can also define styles to use them later. Here we define style `my_style` with red foreground, black background and with underlined text:"
+  let my_style =
+    style.Style(fg: style.Red, bg: style.Black, attributes: [style.Underline])
+  let line10 =
+    "`let my_style = style.Style(fg: style.Red, bg: style.Black, attributes: [style.Underline])`"
+    |> style.on_bright_grey()
+  let line11 = "And apply style to this line." |> style.with_style(my_style)
+  stdout.execute([
+    command.Println(line9),
+    command.Println(line10),
+    command.Println(line11),
+  ])
 }
 
 fn make_rainbow(s: String) -> String {

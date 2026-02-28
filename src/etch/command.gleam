@@ -118,9 +118,23 @@ pub type Command {
   /// Using this is prefered to set both the background and foreground colors.
   SetForegroundAndBackgroundColors(fg: Color, bg: Color)
   /// Sets [`Style`](style.html#Style)
+  /// Example:
+  /// ```gleam
+  /// execute([
+  ///   command.SetStyle(Style(fg: style.Red, bg: style.Black, attributes: [style.Underline])),
+  ///   command.Print("my string"),
+  ///   command.ResetStyle,
+  /// ])
   SetStyle(style: Style)
   /// Resets [`Attributes`](style.html#Attribute) and
   /// foreground and background [`Colors`](style.html#Color).
+  /// Example:
+  /// ```gleam
+  /// execute([
+  ///   command.SetStyle(Style(fg: style.Red, bg: style.Black, attributes: [style.Underline])),
+  ///   command.Print("my string"),
+  ///   command.ResetStyle,
+  /// ])
   ResetStyle
   /// Resets foreground and background [`Colors`](style.html#Color).
   ResetColor

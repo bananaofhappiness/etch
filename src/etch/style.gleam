@@ -92,6 +92,7 @@ pub fn with_style(s: String, style: Style) {
   <> get_bg(style.bg)
   <> ";"
   <> get_attributes(style.attributes, "")
+  <> "m"
   <> s
 }
 
@@ -179,7 +180,7 @@ pub fn with_on(s: String, fg: Color, bg: Color) -> String {
 
 /// Sets [`Attributes`](style.html#Attribute) of a string.
 pub fn attributes(s: String, a: List(Attribute)) -> String {
-  get_attributes(a, "") <> "m" <> s
+  csi <> get_attributes(a, "") <> "m" <> s
 }
 
 fn get_attributes(a: List(Attribute), acc: String) -> String {
@@ -187,12 +188,12 @@ fn get_attributes(a: List(Attribute), acc: String) -> String {
     [] -> ""
     [attr] ->
       case attr {
-        Bold -> csi <> acc <> "1"
-        Dim -> csi <> acc <> "2"
-        Italic -> csi <> acc <> "3"
-        Underline -> csi <> acc <> "4"
-        Blinking -> csi <> acc <> "5"
-        Inverse -> csi <> acc <> "7"
+        Bold -> acc <> "1"
+        Dim -> acc <> "2"
+        Italic -> acc <> "3"
+        Underline -> acc <> "4"
+        Blinking -> acc <> "5"
+        Inverse -> acc <> "7"
       }
     [attr, ..rest] -> {
       let acc =
@@ -241,12 +242,12 @@ pub fn inverse(s: String) -> String {
   csi <> "7m" <> s <> csi <> "27m"
 }
 
-/// Resets color of the string. See [`Color`](style.html#Color).
+/// Resets style (foreground, background and attributes). See [`Style`](style.html#Style).
 pub fn reset_style(s: String) -> String {
   s <> csi <> "39;49;22;23;24;25;27m"
 }
 
-/// Resets color of the string. See [`Color`](style.html#Color).
+/// Sets style. See [`Style`](style.html#Style).
 pub fn set_style(s: Style) -> String {
   with_style("", s)
 }

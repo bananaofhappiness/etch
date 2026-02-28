@@ -3,11 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [1.3.1] - 2026-02-28
+## [1.3.2] - 2026-03-01
 
 ### Fixes
-- Fixed crash after receiving SIGWINCH (window resize signal).
+- Fixed mouse event coordinates starting at (1,1) — now they correctly start at (0,0).
+- Fixed styles not being applied properly.
+
+### Added
+- Added style examples to `dev/examples/styles.gleam`.
 
 ### Changed
-- Moved `examples/` directory to `dev/`.
-- Updated documentation to match current API - removed or replaced all references to `command.EnterRaw` with `terminal.enter_raw()`.
+- Updated style documentation.
