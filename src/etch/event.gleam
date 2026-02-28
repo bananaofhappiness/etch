@@ -3,10 +3,11 @@
 //// In order to be able to read events, [`init_event_server`](event.html#init_event_server)
 //// must be called at the start of the application. See `events` example.
 //// ```gleam
-//// pub fn main()
+//// pub fn main() {
 ////   terminal.enter_raw()
 ////   init_event_server()
 ////   loop()
+//// }
 ////
 //// fn loop() {
 ////   handle_input()
