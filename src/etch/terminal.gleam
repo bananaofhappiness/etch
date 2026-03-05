@@ -50,6 +50,15 @@ pub fn is_raw_mode() -> Bool
 
 @target(erlang)
 /// Enters raw mode.
+///
+/// Raw mode is a mode where the terminal does not process input, but instead
+/// passes it directly to the application. This means that:
+/// - Input is not echoed to the screen
+/// - Input is not line-buffered (characters are available immediately)
+/// - Some special characters are not processed by the terminal
+///
+/// This is necessary for terminal UI applications that need to handle
+/// keyboard input and mouse events directly.
 pub fn enter_raw() {
   enter_raw_ffi()
   set_raw(True)
@@ -57,6 +66,17 @@ pub fn enter_raw() {
 
 @target(erlang)
 /// Exits raw mode.
+///
+/// Raw mode is a mode where the terminal does not process input, but instead
+/// passes it directly to the application. This means that:
+/// - Input is not echoed to the screen
+/// - Input is not line-buffered (characters are available immediately)
+/// - Some special characters are not processed by the terminal
+///
+/// **Warning:** This function is currently broken when used with the event server.
+/// If [`event.init_event_server`](event.html#init_event_server) was called,
+/// exiting raw mode will break input handling. The event server relies on raw
+/// mode being active to properly read events.
 pub fn exit_raw() {
   exit_raw_ffi()
   set_raw(False)

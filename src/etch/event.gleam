@@ -263,6 +263,9 @@ fn handle_sigwinch() -> Nil
 
 @target(erlang)
 /// Initializes the event server responsible for listening for events.
+///
+/// This function must be called after [`terminal.enter_raw()`](terminal.html#enter_raw)
+/// to ensure proper event handling.
 pub fn init_event_server() {
   start_link()
   tty_state_init()
@@ -271,6 +274,9 @@ pub fn init_event_server() {
 
 @target(javascript)
 /// Initializes the event server responsible for listening for events.
+///
+/// This function must be called after [`terminal.enter_raw()`](terminal.html#enter_raw)
+/// to ensure proper event handling.
 pub fn init_event_server() {
   handle_sigwinch()
   input_loop()
