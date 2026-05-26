@@ -1,9 +1,9 @@
 name = "etch"
-version = "1.3.3"
+version = "1.4.0"
 description = "A Gleam TUI Backend Library"
 licences = ["MIT"]
 repository = { type = "github", user = "bananaofhappiness", repo = "etch" }
-target = "javascript"
+target = "erlang"
 
 internal_modules = [
   "etch/internal",
@@ -19,7 +19,7 @@ runtime = "bun"
 allow_read = true
 
 [dependencies]
-gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+gleam_stdlib = ">= 1.0.2 and < 2.0.0"
 gleam_erlang = ">= 1.3.0 and < 2.0.0"
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
 

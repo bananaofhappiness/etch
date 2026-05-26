@@ -3,6 +3,12 @@
 //// In order to be able to read events, [`init_event_server`](event.html#init_event_server)
 //// must be called at the start of the application. See `events` example.
 //// ```gleam
+//// import etch/command
+//// import etch/event.{Key, Mouse, init_event_server}
+//// import etch/stdout
+//// import etch/terminal
+//// import gleam/option.{None, Some}
+////
 //// pub fn main() {
 ////   terminal.enter_raw()
 ////   init_event_server()
@@ -16,21 +22,17 @@
 ////
 //// fn handle_input() {
 ////   case event.read() {
-////     Some(Ok(Mouse(m))) -> {
+////     Some(Ok(Mouse(_m))) -> {
 ////       stdout.execute([
 ////         command.Println("Got mouse event"),
 ////       ])
 ////     }
 ////     Some(Ok(Key(s))) -> {
-////         stdout.execute([
-////           command.Println(
-////             "Got key event: \"" <> event.to_string(s.code) <> "\"",
-////           ),
-////         ])
-////         }
-////       }
+////       stdout.execute([
+////         command.Println("Got key event: \"" <> event.to_string(s.code) <> "\""),
+////       ])
 ////     }
-////     Some(Error(_)) -> Nil
+////     Some(_) -> Nil
 ////     None -> Nil
 ////   }
 //// }
@@ -969,7 +971,9 @@ pub fn parse_kind(kind: Int) -> KeyEventKind {
 }
 
 @internal
-pub fn parse_modifier_and_kind(code: String) -> Result(#(Int, Int), EventError) {
+pub fn parse_modifier_and_kind(
+  code: String,
+) -> Result(#(Int, Int), EventError) {
   let split = string.split(code, ":")
   case split {
     [modifier_mask, kind_mask] -> {

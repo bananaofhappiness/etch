@@ -132,7 +132,7 @@ pub fn main() {
 @target(javascript)
 fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   let x =
-    list.range(0, columns * rows)
+    int.range(from: 0, to: columns * rows, with: [], run: list.prepend)
     |> list.zip(list.repeat(0, columns * rows))
   let d = dict.from_list(x)
   // add snake to the grid (value=1)
@@ -164,7 +164,10 @@ fn loop(state: State) {
 }
 
 @target(javascript)
-fn handle_input(event: Option(Result(Event, EventError)), state: State) -> State {
+fn handle_input(
+  event: Option(Result(Event, EventError)),
+  state: State,
+) -> State {
   // `poll(n)` waits n ms for an event. if there were no events, it returns None.
   case event, state.direction {
     // if the snake is moving downwards and we press w or up arrow, do nothing.

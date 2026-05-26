@@ -109,7 +109,7 @@ pub fn main() {
 @target(erlang)
 fn make_grid(columns: Int, rows: Int) -> Dict(Int, Int) {
   let x =
-    list.range(0, columns * rows)
+    int.range(from: 0, to: columns * rows, with: [], run: list.prepend)
     |> list.zip(list.repeat(0, columns * rows))
   let d = dict.from_list(x)
   // add snake to the grid (value=1)
