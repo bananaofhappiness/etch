@@ -1,4 +1,4 @@
--module(event_ffi).
+-module(input_ffi).
 
 -behaviour(gen_server).
 

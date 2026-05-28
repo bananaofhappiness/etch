@@ -1,36 +1,34 @@
 //// This example shows how to handle user inputs and events.
 
-@target(erlang)
 import etch/command
-@target(erlang)
 import etch/cursor
-@target(erlang)
 import etch/event.{
-  Char, Esc, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
+  type Event, type EventError, Char, Esc, FocusGained, FocusLost, Key, Mouse,
+  Resize,
 }
-@target(erlang)
+import etch/javascript/input
+import etch/javascript/tty
 import etch/stdout
-@target(erlang)
 import etch/terminal
-@target(erlang)
 import gleam/int
-@target(erlang)
-import gleam/option.{None, Some}
+import gleam/javascript/promise
+import gleam/option.{type Option, None, Some}
 
-@target(erlang)
-@external(erlang, "erlang", "halt")
+@external(javascript, "./tools.js", "exit")
 fn exit(n: Int) -> Nil
 
-@target(javascript)
-pub fn main() {
-  panic as "This is a placeholder so that `gleam publish` does not complain about empty module. Please use Erlang target."
-}
-
-@target(erlang)
 pub fn main() {
   // Raw mode disables terminal input/output processing so the program
   // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-  terminal.enter_raw()
+  let _ = case tty.enter_raw() {
+    Ok(_) -> {
+      Nil
+    }
+    Error(_) -> {
+      stdout.execute([command.Print("Could not enter raw mode, exiting")])
+      exit(1)
+    }
+  }
   stdout.execute([
     command.EnableMouseCapture,
     command.Clear(terminal.All),
@@ -45,32 +43,29 @@ pub fn main() {
     ]),
   ])
   // Make sure you init event server before handling user input and events.
-  init_event_server()
+  input.init_event_server()
   loop()
 }
 
-@target(erlang)
 fn loop() {
-  handle_input()
+  // We call `input.read()` to wait for available input.
+  // It blocks program execution until an event is received.
+  // This is exactly what we need, because the project has no logic
+  // running constantly in the background.
+  use event <- promise.await(input.read())
+  handle_input(event)
   loop()
 }
 
-@target(erlang)
 const default_text = "Press Escape to exit
 Press R to get current cursor position
 Press F to get keyboard enhancement flags\n"
 
-@target(erlang)
-fn handle_input() {
-  // We call `event.read()` to wait for available input.
-  // It blocks program execution until an event is received.
-  // This is exactly what we need, because the project has no logic
-  // running constantly in the background. We only need to update the screen
-  // when its size changes.
-  let event = event.read()
+fn handle_input(event: Option(Result(Event, EventError))) {
   case event {
     // the rest of the code speaks for itself.
     Some(Ok(Mouse(m))) -> {
+      use _ <- promise.new()
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
@@ -82,7 +77,8 @@ fn handle_input() {
         command.Println("Modifiers: " <> modifiers_to_string(m.modifiers)),
       ])
     }
-    Some(Ok(Resize(c, r))) ->
+    Some(Ok(Resize(c, r))) -> {
+      use _ <- promise.new()
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
@@ -91,23 +87,29 @@ fn handle_input() {
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
       ])
-    Some(Ok(FocusGained)) ->
+    }
+    Some(Ok(FocusGained)) -> {
+      use _ <- promise.new()
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println(default_text),
         command.Println("Focus gained."),
       ])
-    Some(Ok(FocusLost)) ->
+    }
+    Some(Ok(FocusLost)) -> {
+      use _ <- promise.new()
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
         command.Println(default_text),
         command.Println("Focus lost."),
       ])
+    }
     Some(Ok(Key(s))) -> {
       case s.code {
         Esc -> {
+          use _ <- promise.new()
           stdout.execute([
             command.DisableMouseCapture,
             command.Clear(terminal.All),
@@ -118,8 +120,11 @@ fn handle_input() {
           exit(0)
         }
         Char("R") if s.kind == event.Press -> {
-          case event.get_cursor_position() {
+          use pos <- promise.await(input.get_cursor_position())
+          promise.resolve(pos)
+          case pos {
             Ok(#(x, y)) -> {
+              use _ <- promise.new()
               let x = int.to_string(x)
               let y = int.to_string(y)
               stdout.execute([
@@ -127,17 +132,23 @@ fn handle_input() {
               ])
             }
             Error(event.FailedToParseEvent(e)) -> {
+              use _ <- promise.new()
               stdout.execute([
                 command.Println(e),
               ])
             }
           }
+        }
+        Char("R") -> {
+          use _ <- promise.new()
           Nil
         }
-        Char("R") -> Nil
         Char("F") -> {
-          case event.get_keyboard_enhancement_flags() {
+          use flags <- promise.await(input.get_keyboard_enhancement_flags())
+          promise.resolve(flags)
+          case flags {
             Ok(f) -> {
+              use _ <- promise.new()
               stdout.execute([
                 command.MoveTo(0, 0),
                 command.Clear(terminal.FromCursorDown),
@@ -146,6 +157,7 @@ fn handle_input() {
               ])
             }
             Error(event.FailedToParseEvent(e)) -> {
+              use _ <- promise.new()
               stdout.execute([
                 command.Println(e),
               ])
@@ -153,6 +165,7 @@ fn handle_input() {
           }
         }
         _ -> {
+          use _ <- promise.new()
           stdout.execute([
             command.MoveTo(0, 0),
             command.Clear(terminal.FromCursorDown),
@@ -168,14 +181,20 @@ fn handle_input() {
         }
       }
     }
-    Some(Error(_)) -> Nil
-    None -> Nil
+    Some(Error(_)) -> {
+      use _ <- promise.new()
+      Nil
+    }
+    None -> {
+      use _ <- promise.new()
+      Nil
+    }
   }
+  promise.resolve(event)
 }
 
 // Functions below are use to display events data, nothing interesting.
 
-@target(erlang)
 fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   let capslock = case key_event_state.capslock {
     True -> "Capslock "
@@ -192,7 +211,6 @@ fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   capslock <> keypad <> numlock
 }
 
-@target(erlang)
 fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   case key_event_kind {
     event.Press -> "Press"
@@ -201,7 +219,6 @@ fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   }
 }
 
-@target(erlang)
 fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   let shift = case modifiers.shift {
     True -> "Shift "
@@ -218,7 +235,6 @@ fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   shift <> control <> alt
 }
 
-@target(erlang)
 fn flags_to_string(
   l: List(event.KeyboardEnhancementFlag),
   acc: String,
@@ -239,7 +255,6 @@ fn flags_to_string(
   }
 }
 
-@target(erlang)
 fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   case kind {
     event.Down(button) -> "Pressed " <> button_to_string(button)
@@ -253,7 +268,6 @@ fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   }
 }
 
-@target(erlang)
 fn button_to_string(button: event.MouseButton) -> String {
   case button {
     event.Left -> "Left Mouse Button"

@@ -3,37 +3,33 @@
 //// the background accordingly).
 
 import etch/command
-import gleam/result
-
-import etch/event.{type Event, type EventError}
+import etch/event.{type Event, type EventError, Esc, Key}
+import etch/javascript/input
+import etch/javascript/tty
 import etch/stdout
 import etch/style
 import etch/terminal
-@target(javascript)
 import gleam/javascript/promise
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import gleam/string
+
+@external(javascript, "./tools.js", "exit")
+fn exit(n: Int) -> Nil
 
 pub fn main() {
   // First, we hide cursors
   stdout.execute([command.HideCursor])
   // We get windows size so we can center our rainbow background
-  let #(x, y) = terminal.window_size() |> result.unwrap(#(0, 0))
+  let #(x, y) = tty.window_size() |> result.unwrap(#(0, 0))
   draw_centered_text(x, y)
   // make sure to init event server before listening to events.
-  event.init_event_server()
+  input.init_event_server()
   loop()
 }
 
-@target(erlang)
 fn loop() {
-  handle_events(event.read())
-  loop()
-}
-
-@target(javascript)
-fn loop() {
-  use event <- promise.await(event.read())
+  use event <- promise.await(input.read())
   handle_events(event)
   loop()
 }
@@ -48,6 +44,12 @@ fn handle_events(event: Option(Result(Event, EventError))) {
     // We only need to check for `Resize` event in this program.
     Some(Ok(event.Resize(x, y))) -> {
       draw_centered_text(x, y)
+    }
+    Some(Ok(Key(s))) -> {
+      case s.code {
+        Esc -> exit(0)
+        _ -> Nil
+      }
     }
     Some(_) -> Nil
     None -> Nil

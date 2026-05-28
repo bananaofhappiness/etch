@@ -1,14 +1,13 @@
-import { None, Some } from "../../gleam_stdlib/gleam/option.mjs";
-import { Ok, Error } from "../gleam.mjs";
-import { FailedToParseEvent, Resize } from "../etch/event.mjs";
-import { window_size } from "../terminal/terminal_ffi.mjs";
+import { None, Some } from "../../../gleam_stdlib/gleam/option.mjs";
+import { Ok, Error } from "../../../prelude.mjs";
+import { Resize } from "../../../etch/etch/event.mjs";
+import { window_size } from "./terminal_ffi.mjs";
 let queue = [];
 
 let resolvers = [];
 
-export function get_chars(str) {
+export function get_chars() {
   return new Promise((resolve, reject) => {
-    const wasRaw = !!process.stdin.isRaw;
     try {
       process.stdin.resume();
     } catch {}
@@ -42,9 +41,6 @@ export function get_chars(str) {
       process.stdin.off("error", onError);
       try {
         process.stdin.pause();
-      } catch {}
-      try {
-        if (!wasRaw && process.stdin.isRaw) process.stdin.setRawMode(false);
       } catch {}
     }
     process.stdin.on("data", onData);

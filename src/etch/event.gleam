@@ -39,17 +39,7 @@
 //// ```
 
 import etch/internal/consts.{csi}
-@target(erlang)
-import etch/terminal.{is_raw_mode, tty_state_init}
-@target(erlang)
-import gleam/erlang/process
 import gleam/int
-@target(erlang)
-import gleam/io
-@target(javascript)
-import gleam/javascript/array.{type Array}
-@target(javascript)
-import gleam/javascript/promise.{type Promise}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result.{try}
@@ -61,7 +51,7 @@ pub type EventError {
 }
 
 /// Keyboard enhancement flag.
-/// See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
+/// See <https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement>
 pub type KeyboardEnhancementFlag {
   DisambiguateEscapeCode
   ReportEventTypes
@@ -211,119 +201,6 @@ pub type Event {
   Key(KeyEvent)
   Mouse(MouseEvent)
   Resize(Int, Int)
-}
-
-@target(erlang)
-@external(erlang, "io", "get_chars")
-fn get_chars(prompt: String, n: Int) -> String
-
-@target(erlang)
-@external(erlang, "io", "get_line")
-fn erlang_read(prompt: String) -> String
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "get_chars")
-fn get_chars(_prompt: String, _n: Int) -> Promise(Array(Int))
-
-@target(erlang)
-@external(erlang, "event_ffi", "start_link")
-fn start_link() -> Nil
-
-@target(erlang)
-@external(erlang, "event_ffi", "push")
-fn push(event: Result(Event, EventError)) -> Nil
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "push")
-fn push(event: Result(Event, EventError)) -> Nil
-
-@target(erlang)
-/// Checks if there is an [`Event`](event.html#Event) available.
-/// Returns None if no events were received within the timeout.
-/// See also [`read`](event.html#read).
-@external(erlang, "event_ffi", "poll")
-pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "poll")
-pub fn poll(timeout: Int) -> Promise(Option(Result(Event, EventError)))
-
-@target(erlang)
-/// Checks if there is an [`Event`](event.html#Event) available.
-/// Waits forever for an available event.
-/// See also [`poll`](event.html#poll).
-@external(erlang, "event_ffi", "read")
-pub fn read() -> Option(Result(Event, EventError))
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "read")
-pub fn read() -> Promise(Option(Result(Event, EventError)))
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "handle_sigwinch")
-fn handle_sigwinch() -> Nil
-
-@target(erlang)
-/// Initializes the event server responsible for listening for events.
-///
-/// This function must be called after [`terminal.enter_raw()`](terminal.html#enter_raw)
-/// to ensure proper event handling.
-pub fn init_event_server() {
-  start_link()
-  tty_state_init()
-  process.spawn(fn() { input_loop() })
-}
-
-@target(javascript)
-/// Initializes the event server responsible for listening for events.
-///
-/// This function must be called after [`terminal.enter_raw()`](terminal.html#enter_raw)
-/// to ensure proper event handling.
-pub fn init_event_server() {
-  handle_sigwinch()
-  input_loop()
-}
-
-@target(erlang)
-fn input_loop() {
-  let str = case is_raw_mode() {
-    True -> get_chars("", 128)
-    False -> erlang_read("")
-  }
-  let str = string.to_graphemes(str)
-  let events = parse_events(str, "", [], False)
-  push_events(events)
-  input_loop()
-}
-
-@target(javascript)
-fn input_loop() {
-  use bytes <- promise.await(get_chars("", 1024))
-  let bytes =
-    array.to_list(bytes)
-    |> list.map(fn(n) {
-      let code =
-        string.utf_codepoint(n)
-        |> result.lazy_unwrap(fn() {
-          let assert Ok(fallback) = string.utf_codepoint(65)
-          fallback
-        })
-      string.from_utf_codepoints([code])
-    })
-  let events = parse_events(bytes, "", [], False)
-  push_events(events)
-
-  input_loop()
-}
-
-fn push_events(events: List(Result(Event, EventError))) {
-  case events {
-    [] -> Nil
-    [e, ..rest] -> {
-      push(e)
-      push_events(rest)
-    }
-  }
 }
 
 @internal
@@ -498,29 +375,6 @@ pub fn handle_escape_code(s: String) -> Result(Event, EventError) {
       }
   }
 }
-
-@target(erlang)
-/// Returns cursor position.
-/// This function shouldn't be called in a tight loop. It's fine to call it when
-/// responding to specific user input (e.g., after a key press), but avoid calling
-/// it on every loop iteration.
-pub fn get_cursor_position() -> Result(#(Int, Int), EventError) {
-  io.print(csi <> "6n")
-  let pos = get_chars("", 32)
-  case pos {
-    "\u{001b}[" <> s -> {
-      case string.last(s) {
-        Ok("R") -> parse_cursor_position(s)
-        _ -> Error(FailedToParseEvent("Could not get cursor position"))
-      }
-    }
-    _ -> Error(FailedToParseEvent("Could not get cursor position"))
-  }
-}
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "get_cursor_position")
-pub fn get_cursor_position() -> Promise(Result(#(Int, Int), EventError))
 
 @internal
 pub fn parse_cursor_position(s: String) -> Result(#(Int, Int), EventError) {
@@ -842,46 +696,6 @@ pub fn parse_rxvt_mouse(s: String) -> Result(Event, EventError) {
 @internal
 pub fn starts_with_number(s: String) -> Bool {
   string.first(s) |> result.unwrap("") |> int.parse() |> result.is_ok()
-}
-
-@target(erlang)
-/// Get keyboard enhancement flags. See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
-/// This function shouldn't be called in a tight loop. It's fine to call it when
-/// responding to specific user input (e.g., after a key press), but avoid calling
-/// it on every loop iteration.
-pub fn get_keyboard_enhancement_flags() -> Result(
-  List(KeyboardEnhancementFlag),
-  EventError,
-) {
-  io.print(csi <> "?u")
-  let flags = get_chars("", 32)
-  case flags {
-    "\u{001b}[?" <> s -> {
-      case string.last(s) {
-        Ok("u") -> Ok(parse_keyboard_enhancement_flags(s))
-        _ -> Error(FailedToParseEvent("Could not get enhancment flags"))
-      }
-    }
-    _ -> Error(FailedToParseEvent("Could not get cursor position"))
-  }
-}
-
-@target(javascript)
-@external(javascript, "../input/input_ffi.mjs", "get_keyboard_enhancement_flags_code")
-pub fn get_keyboard_enhancement_flags_code() -> Promise(
-  Result(String, EventError),
-)
-
-@target(javascript)
-pub fn get_keyboard_enhancement_flags() -> Promise(
-  Result(List(KeyboardEnhancementFlag), EventError),
-) {
-  use flags <- promise.await(get_keyboard_enhancement_flags_code())
-  let res = case flags {
-    Ok(code) -> Ok(parse_keyboard_enhancement_flags(code))
-    _ -> Error(FailedToParseEvent("Could not get enhancment flags"))
-  }
-  promise.resolve(res)
 }
 
 @internal

@@ -1,4 +1,6 @@
 *.beam
 *.ez
 /build
+etch_erlang/build
+etch_javascript/build
 erl_crash.dump

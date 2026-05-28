@@ -25,11 +25,11 @@ This project was inspired by [crossterm](https://github.com/crossterm-rs/crosste
 - **Position Saving**: Save and restore cursor positions
 - **Styling**: Set cursor style (block, underscore, bar) with blinking options
 
-### Event Handling
-- **Keyboard Input**: Capture and parse keyboard events with modifiers
-- **Mouse Support**: Handle mouse events (clicks, drags, scrolls)
-- **Focus Management**: Detect focus gain/loss events
-- **Window Resizing**: Respond to terminal resize events
+### Input Handling
+- **Keyboard Input**: Capture and parse keyboard input with modifiers
+- **Mouse Support**: Handle mouse input (clicks, drags, scrolls)
+- **Focus Management**: Detect focus gain/loss event
+- **Window Resizing**: Respond to terminal resize event
 - **Keyboard Enhancement**: Support for [progressive keyboard enhancement flags](https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement)
 
 ### Text Styling
@@ -46,19 +46,22 @@ This project was inspired by [crossterm](https://github.com/crossterm-rs/crosste
 - **Comprehensive Commands**: Wide range of commands for all terminal operations
 - **Immediate Execution**: Execute commands without queueing
 
+## Input Handling and Terminal Raw Mode
+
+These features are target specific. Add corresponding packages: `gleam add etch_erlang` or `gleam add etch_javascript`.
+Refer to their documentation to use these features properly and check examples.
+
 ## Getting Started
 
 Here's a basic template to get you started with Etch:
 
 ```gleam
 import etch/command
-import etch/terminal
 import etch/style
 import etch/stdout.{type Queue, execute, flush, queue}
 
 pub fn main() {
-  // Use execute to execute `Commands`
-  terminal.enter_raw()
+  // Execute `Commands`
   execute([
     command.EnterAlternateScreen,
     command.HideCursor,
@@ -80,16 +83,22 @@ pub fn main() {
 
 ## Examples
 
-Check out the examples in the `examples/` directory for more advanced usage:
+Check out the examples in the `examples/`, `examples_erlang/` and `examples_javascript` directories for more advanced usage:
 
 - `hello_world.gleam`: Basic text rendering and centering
 - `events.gleam`: Comprehensive event handling
 - `snake.gleam`: Simple game implementation
 - `styles.gleam`: Advanced text styling techniques
 
-To run the use this command:
+To run examples use this command:
 ```sh
 gleam run -m examples/{example_name}
+```
+
+To run target specific examples `cd` into a target directory
+```sh
+cd examples_erlang # or cd examples_javascript
+gleam run -m {example_name}
 ```
 
 ## Documentation
@@ -151,7 +160,7 @@ You will get an executable file in your project's root directory. Users must hav
     defp deps do
       [
         # ...
-        {:etch, "~> 1.2.0"},
+        {:etch, "~> 1.4.0"},
         # ...
       ]
     end

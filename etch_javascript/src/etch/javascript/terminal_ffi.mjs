@@ -1,9 +1,9 @@
-import { Ok, Error } from "../gleam.mjs";
+import { Ok, Error } from "../../../prelude.mjs";
 import {
   FailedToEnterRawMode,
   FailedToExitRawMode,
   CouldNotGetWindowSize,
-} from "../etch/terminal.mjs";
+} from "./tty.mjs";
 
 export function enter_raw() {
   try {
