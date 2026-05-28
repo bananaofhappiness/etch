@@ -16,7 +16,7 @@ fn exit(n: Int) -> Nil
 pub fn main() {
   // Raw mode disables terminal input/output processing so the program
   // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-  tty.enter_raw()
+  let assert Ok(_) = tty.enter_raw()
   stdout.execute([
     command.EnableMouseCapture,
     command.Clear(terminal.All),

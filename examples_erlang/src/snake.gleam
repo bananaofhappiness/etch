@@ -60,7 +60,7 @@ type State {
 pub fn main() {
   // Raw mode disables terminal input/output processing so the program
   // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-  tty.enter_raw()
+  let assert Ok(_) = tty.enter_raw()
   stdout.execute([
     // enter alternate screeen to not affect main buffer.
     command.EnterAlternateScreen,

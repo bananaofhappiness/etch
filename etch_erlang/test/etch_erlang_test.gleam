@@ -1,5 +1,6 @@
 import etch/erlang/tty.{
-  CouldNotGetWindowSize, enter_raw, exit_raw, is_raw_mode, window_size,
+  CouldNotGetWindowSize, FailedToEnterRawMode, FailedToExitRawMode, enter_raw,
+  exit_raw, is_raw_mode, window_size,
 }
 import gleeunit
 
@@ -8,10 +9,26 @@ pub fn main() -> Nil {
 }
 
 pub fn enter_and_exit_raw_test() -> Nil {
-  let _ = enter_raw()
-  assert is_raw_mode()
-  let _ = exit_raw()
-  assert !is_raw_mode()
+  let enter_result = enter_raw()
+  case enter_result {
+    Ok(ok) -> {
+      assert ok == Nil
+      assert is_raw_mode()
+    }
+    Error(error) -> {
+      assert error == FailedToEnterRawMode
+    }
+  }
+  let exit_result = exit_raw()
+  case exit_result {
+    Ok(ok) -> {
+      assert ok == Nil
+      assert !is_raw_mode()
+    }
+    Error(error) -> {
+      assert error == FailedToExitRawMode
+    }
+  }
 }
 
 pub fn get_window_size_test() -> Nil {

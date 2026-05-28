@@ -4,13 +4,15 @@ import gleam/string
 
 pub type TerminalError {
   CouldNotGetWindowSize
+  FailedToEnterRawMode
+  FailedToExitRawMode
 }
 
 @external(erlang, "terminal_ffi", "enter_raw")
-fn enter_raw_ffi() -> Nil
+fn enter_raw_ffi() -> Result(Nil, TerminalError)
 
 @external(erlang, "terminal_ffi", "exit_raw")
-fn exit_raw_ffi() -> Nil
+fn exit_raw_ffi() -> Result(Nil, TerminalError)
 
 @external(erlang, "tty_state", "init")
 @internal
@@ -36,16 +38,21 @@ pub fn window_size() -> Result(#(Int, Int), TerminalError)
 ///
 /// This is necessary for terminal UI applications that need to handle
 /// keyboard input and mouse events directly.
-pub fn enter_raw() {
+pub fn enter_raw() -> Result(Nil, TerminalError) {
   set_raw(True)
-  enter_raw_ffi()
-  let input_loop_pid = get_input_loop_pid()
-  case input_loop_pid {
-    Ok(pid) -> {
-      process.send_exit(pid)
-      start_input_loop()
+  case enter_raw_ffi() {
+    Error(e) -> Error(e)
+    Ok(_) -> {
+      let input_loop_pid = get_input_loop_pid()
+      case input_loop_pid {
+        Ok(pid) -> {
+          process.send_exit(pid)
+          start_input_loop()
+          Ok(Nil)
+        }
+        Error(_) -> Error(FailedToEnterRawMode)
+      }
     }
-    Error(_) -> Nil
   }
 }
 
@@ -56,7 +63,7 @@ pub fn enter_raw() {
 /// - Input is not echoed to the screen
 /// - Input is not line-buffered (characters are available immediately)
 /// - Some special characters are not processed by the terminal
-pub fn exit_raw() {
+pub fn exit_raw() -> Result(Nil, TerminalError) {
   set_raw(False)
   exit_raw_ffi()
 }
