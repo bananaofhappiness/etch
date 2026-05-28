@@ -1,47 +1,26 @@
 //// This example shows how to handle user inputs and events.
 
-@target(javascript)
 import etch/command
-@target(javascript)
 import etch/cursor
-@target(javascript)
 import etch/event.{
   type Event, type EventError, Char, Esc, FocusGained, FocusLost, Key, Mouse,
-  Resize, init_event_server,
+  Resize,
 }
-@target(javascript)
+import etch/javascript/input
+import etch/javascript/tty
 import etch/stdout
-@target(javascript)
 import etch/terminal
-@target(javascript)
 import gleam/int
-@target(javascript)
 import gleam/javascript/promise
-@target(javascript)
 import gleam/option.{type Option, None, Some}
 
-@target(javascript)
 @external(javascript, "./tools.js", "exit")
 fn exit(n: Int) -> Nil
 
-@target(erlang)
-pub fn main() {
-  panic as "This is a placeholder so that `gleam publish` does not complain about empty module. Please use JavaScript target."
-}
-
-@target(javascript)
 pub fn main() {
   // Raw mode disables terminal input/output processing so the program
   // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-  let _ = case terminal.enter_raw() {
-    Ok(_) -> {
-      Nil
-    }
-    Error(_) -> {
-      stdout.execute([command.Print("Could not enter raw mode, exiting")])
-      exit(1)
-    }
-  }
+  let assert Ok(_) = tty.enter_raw()
   stdout.execute([
     command.EnableMouseCapture,
     command.Clear(terminal.All),
@@ -56,24 +35,24 @@ pub fn main() {
     ]),
   ])
   // Make sure you init event server before handling user input and events.
-  init_event_server()
+  input.init_event_server()
   loop()
 }
 
-@target(javascript)
 fn loop() {
-  // This is how you read events using JS target.
-  use event <- promise.await(event.read())
+  // We call `input.read()` to wait for available input.
+  // It blocks program execution until an event is received.
+  // This is exactly what we need, because the project has no logic
+  // running constantly in the background.
+  use event <- promise.await(input.read())
   handle_input(event)
   loop()
 }
 
-@target(javascript)
 const default_text = "Press Escape to exit
 Press R to get current cursor position
 Press F to get keyboard enhancement flags\n"
 
-@target(javascript)
 fn handle_input(event: Option(Result(Event, EventError))) {
   case event {
     // the rest of the code speaks for itself.
@@ -133,7 +112,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
           exit(0)
         }
         Char("R") if s.kind == event.Press -> {
-          use pos <- promise.await(event.get_cursor_position())
+          use pos <- promise.await(input.get_cursor_position())
           promise.resolve(pos)
           case pos {
             Ok(#(x, y)) -> {
@@ -157,7 +136,7 @@ fn handle_input(event: Option(Result(Event, EventError))) {
           Nil
         }
         Char("F") -> {
-          use flags <- promise.await(event.get_keyboard_enhancement_flags())
+          use flags <- promise.await(input.get_keyboard_enhancement_flags())
           promise.resolve(flags)
           case flags {
             Ok(f) -> {
@@ -208,7 +187,6 @@ fn handle_input(event: Option(Result(Event, EventError))) {
 
 // Functions below are use to display events data, nothing interesting.
 
-@target(javascript)
 fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   let capslock = case key_event_state.capslock {
     True -> "Capslock "
@@ -225,7 +203,6 @@ fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   capslock <> keypad <> numlock
 }
 
-@target(javascript)
 fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   case key_event_kind {
     event.Press -> "Press"
@@ -234,7 +211,6 @@ fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   }
 }
 
-@target(javascript)
 fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   let shift = case modifiers.shift {
     True -> "Shift "
@@ -251,7 +227,6 @@ fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   shift <> control <> alt
 }
 
-@target(javascript)
 fn flags_to_string(
   l: List(event.KeyboardEnhancementFlag),
   acc: String,
@@ -272,7 +247,6 @@ fn flags_to_string(
   }
 }
 
-@target(javascript)
 fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   case kind {
     event.Down(button) -> "Pressed " <> button_to_string(button)
@@ -286,7 +260,6 @@ fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   }
 }
 
-@target(javascript)
 fn button_to_string(button: event.MouseButton) -> String {
   case button {
     event.Left -> "Left Mouse Button"

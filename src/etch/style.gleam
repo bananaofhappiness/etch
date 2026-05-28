@@ -41,7 +41,7 @@ pub type Color {
   BrightWhite
   /// Bright grey color.
   BrightGrey
-  /// Ansi color (256 colors). See https://www.ditig.com/256-colors-cheat-sheet.
+  /// Ansi color (256 colors). See <https://www.ditig.com/256-colors-cheat-sheet.>
   AnsiValue(v: Int)
   /// RGB color.
   Rgb(r: Int, g: Int, b: Int)

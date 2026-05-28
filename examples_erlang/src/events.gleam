@@ -1,36 +1,22 @@
 //// This example shows how to handle user inputs and events.
 
-@target(erlang)
 import etch/command
-@target(erlang)
 import etch/cursor
-@target(erlang)
-import etch/event.{
-  Char, Esc, FocusGained, FocusLost, Key, Mouse, Resize, init_event_server,
-}
-@target(erlang)
+import etch/erlang/input
+import etch/erlang/tty
+import etch/event.{Char, Esc, FocusGained, FocusLost, Key, Mouse, Resize}
 import etch/stdout
-@target(erlang)
 import etch/terminal
-@target(erlang)
 import gleam/int
-@target(erlang)
 import gleam/option.{None, Some}
 
-@target(erlang)
 @external(erlang, "erlang", "halt")
 fn exit(n: Int) -> Nil
 
-@target(javascript)
-pub fn main() {
-  panic as "This is a placeholder so that `gleam publish` does not complain about empty module. Please use Erlang target."
-}
-
-@target(erlang)
 pub fn main() {
   // Raw mode disables terminal input/output processing so the program
   // receives each keystroke immediately as raw bytes (no echo, line buffering, or special handling).
-  terminal.enter_raw()
+  let assert Ok(_) = tty.enter_raw()
   stdout.execute([
     command.EnableMouseCapture,
     command.Clear(terminal.All),
@@ -45,36 +31,36 @@ pub fn main() {
     ]),
   ])
   // Make sure you init event server before handling user input and events.
-  init_event_server()
+  input.init_event_server()
   loop()
 }
 
-@target(erlang)
 fn loop() {
   handle_input()
   loop()
 }
 
-@target(erlang)
-const default_text = "Press Escape to exit
-Press R to get current cursor position
-Press F to get keyboard enhancement flags\n"
+const default_text1 = "Press Escape to exit"
 
-@target(erlang)
+const default_text2 = "Press R to get current cursor position"
+
+const default_text3 = "Press F to get keyboard enhancement flags\n"
+
 fn handle_input() {
-  // We call `event.read()` to wait for available input.
+  // We call `input.read()` to wait for available input.
   // It blocks program execution until an event is received.
   // This is exactly what we need, because the project has no logic
-  // running constantly in the background. We only need to update the screen
-  // when its size changes.
-  let event = event.read()
+  // running constantly in the background.
+  let event = input.read()
   case event {
     // the rest of the code speaks for itself.
     Some(Ok(Mouse(m))) -> {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println(default_text),
+        command.Println(default_text1),
+        command.Println(default_text2),
+        command.Println(default_text3),
         command.Println("Got mouse event"),
         command.Println("Kind: " <> mouse_event_kind_to_string(m.kind)),
         command.Println("Row: " <> int.to_string(m.row)),
@@ -86,7 +72,9 @@ fn handle_input() {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println(default_text),
+        command.Println(default_text1),
+        command.Println(default_text2),
+        command.Println(default_text3),
         command.Println("Window resized. Current size: "),
         command.Println("Columns: " <> int.to_string(c)),
         command.Println("Rows: " <> int.to_string(r)),
@@ -95,14 +83,18 @@ fn handle_input() {
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println(default_text),
+        command.Println(default_text1),
+        command.Println(default_text2),
+        command.Println(default_text3),
         command.Println("Focus gained."),
       ])
     Some(Ok(FocusLost)) ->
       stdout.execute([
         command.MoveTo(0, 0),
         command.Clear(terminal.FromCursorDown),
-        command.Println(default_text),
+        command.Println(default_text1),
+        command.Println(default_text2),
+        command.Println(default_text3),
         command.Println("Focus lost."),
       ])
     Some(Ok(Key(s))) -> {
@@ -118,7 +110,7 @@ fn handle_input() {
           exit(0)
         }
         Char("R") if s.kind == event.Press -> {
-          case event.get_cursor_position() {
+          case input.get_cursor_position() {
             Ok(#(x, y)) -> {
               let x = int.to_string(x)
               let y = int.to_string(y)
@@ -136,12 +128,14 @@ fn handle_input() {
         }
         Char("R") -> Nil
         Char("F") -> {
-          case event.get_keyboard_enhancement_flags() {
+          case input.get_keyboard_enhancement_flags() {
             Ok(f) -> {
               stdout.execute([
-                command.MoveTo(0, 0),
-                command.Clear(terminal.FromCursorDown),
-                command.Println(default_text),
+                // command.MoveTo(0, 0),
+                // command.Clear(terminal.FromCursorDown),
+                command.Println(default_text1),
+                command.Println(default_text2),
+                command.Println(default_text3),
                 command.Println("Flags: " <> flags_to_string(f, "")),
               ])
             }
@@ -154,9 +148,11 @@ fn handle_input() {
         }
         _ -> {
           stdout.execute([
-            command.MoveTo(0, 0),
-            command.Clear(terminal.FromCursorDown),
-            command.Println(default_text),
+            // command.MoveTo(0, 0),
+            // command.Clear(terminal.FromCursorDown),
+            command.Println(default_text1),
+            command.Println(default_text2),
+            command.Println(default_text3),
             command.Println(
               "Got key event: \"" <> event.to_string(s.code) <> "\"",
             ),
@@ -175,7 +171,6 @@ fn handle_input() {
 
 // Functions below are use to display events data, nothing interesting.
 
-@target(erlang)
 fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   let capslock = case key_event_state.capslock {
     True -> "Capslock "
@@ -192,7 +187,6 @@ fn key_event_state_to_string(key_event_state: event.KeyEventState) -> String {
   capslock <> keypad <> numlock
 }
 
-@target(erlang)
 fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   case key_event_kind {
     event.Press -> "Press"
@@ -201,7 +195,6 @@ fn key_event_kind_to_string(key_event_kind: event.KeyEventKind) -> String {
   }
 }
 
-@target(erlang)
 fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   let shift = case modifiers.shift {
     True -> "Shift "
@@ -218,7 +211,6 @@ fn modifiers_to_string(modifiers: event.Modifiers) -> String {
   shift <> control <> alt
 }
 
-@target(erlang)
 fn flags_to_string(
   l: List(event.KeyboardEnhancementFlag),
   acc: String,
@@ -239,7 +231,6 @@ fn flags_to_string(
   }
 }
 
-@target(erlang)
 fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   case kind {
     event.Down(button) -> "Pressed " <> button_to_string(button)
@@ -253,7 +244,6 @@ fn mouse_event_kind_to_string(kind: event.MouseEventKind) -> String {
   }
 }
 
-@target(erlang)
 fn button_to_string(button: event.MouseButton) -> String {
   case button {
     event.Left -> "Left Mouse Button"

@@ -11,16 +11,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - uses: denoland/setup-deno@v2
-      - uses: erlef/setup-beam@v1
         with:
-          otp-version: "28"
           gleam-version: "1.16.0"
-          rebar3-version: "3"
       - run: gleam deps download
-      - run: gleam test --target erlang
       - run: gleam test --target javascript --runtime node
       - run: gleam test --target javascript --runtime deno
       - run: gleam test --target javascript --runtime bun

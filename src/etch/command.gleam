@@ -95,10 +95,10 @@ pub type Command {
   /// Disables mouse capture. See [`event`](event.html)
   DisableMouseCapture
   /// Pushes keyboard enhancement flags.
-  /// See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
+  /// See <https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement>
   PushKeyboardEnhancementFlags(flags: List(KeyboardEnhancementFlag))
   /// Pops keyboard enhancement flags.
-  /// See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
+  /// See <https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement>
   PopKeyboardEnhancementFlags
   /// Enables focus change. See [`event`](event.html)
   EnableFocusChange

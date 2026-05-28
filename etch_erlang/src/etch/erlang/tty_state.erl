@@ -1,6 +1,6 @@
 -module(tty_state).
 
--export([init/0, set_raw/1, is_raw_mode/0]).
+-export([init/0, set_raw/1, is_raw_mode/0, save_input_loop_pid/1, get_input_loop_pid/0]).
 
 init() ->
     case ets:whereis(tty_state) of
@@ -26,4 +26,20 @@ is_raw_mode() ->
             true;
         _ ->
             false
+    end.
+
+save_input_loop_pid(Pid) ->
+    case ets:lookup(tty_state, input_loop_pid) of
+        [{input_loop_pid, _}] ->
+            ets:insert(tty_state, {input_loop_pid, Pid});
+        _ ->
+            ets:insert(tty_state, {input_loop_pid, Pid})
+    end.
+
+get_input_loop_pid() ->
+    case ets:lookup(tty_state, input_loop_pid) of
+        [{input_loop_pid, Pid}] ->
+            {ok, Pid};
+        _ ->
+            {error, nil}
     end.
