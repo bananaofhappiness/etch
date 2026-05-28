@@ -1,4 +1,4 @@
-# Etch - A Gleam TUI Backend Library
+# Etch — A Gleam TUI Backend Library
 
 [![Package Version](https://img.shields.io/hexpm/v/etch)](https://hex.pm/packages/etch)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/etch/)
