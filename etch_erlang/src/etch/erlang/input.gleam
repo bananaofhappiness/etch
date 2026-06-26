@@ -1,15 +1,13 @@
-import etch/erlang/tty.{start_input_loop}
+import etch/erlang/tty.{is_raw_mode}
 import etch/event.{
   type Event, type EventError, type KeyboardEnhancementFlag, FailedToParseEvent,
-  parse_cursor_position, parse_keyboard_enhancement_flags,
+  parse_cursor_position, parse_events, parse_keyboard_enhancement_flags,
 }
 import etch/internal/consts.{csi}
+import gleam/erlang/process.{type Pid}
 import gleam/io
 import gleam/option.{type Option}
 import gleam/string
-
-@external(erlang, "io", "get_chars")
-fn get_chars(prompt: String, n: Int) -> String
 
 @external(erlang, "input_ffi", "start_link")
 fn start_link() -> Nil
@@ -21,19 +19,49 @@ fn init_tty_state() -> Nil
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](input.html#read).
 @external(erlang, "input_ffi", "poll")
-pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
+fn poll(timeout: Int) -> Option(Result(Event, EventError))
 
 /// Checks if there is an [`Event`](https://hexdocs.pm/etch/etch/event.html#Event) available.
 /// Waits forever for an available event.
 /// See also [`poll`](input.html#poll).
 @external(erlang, "input_ffi", "read")
-pub fn read() -> Option(Result(Event, EventError))
+fn read() -> Option(Result(Event, EventError))
+
+@external(erlang, "io", "get_chars")
+fn get_chars(prompt: String, n: Int) -> String
+
+@external(erlang, "io", "get_line")
+fn erlang_read(prompt: String) -> String
+
+@external(erlang, "input_ffi", "push")
+fn push(event: Result(Event, EventError)) -> Nil
 
 /// Initializes the event server responsible for listening for events.
 pub fn init_event_server() {
   init_tty_state()
   start_link()
-  start_input_loop()
+}
+
+@internal
+pub fn input_loop(is_raw_mode: Bool) {
+  let str = case is_raw_mode {
+    True -> get_chars("", 128)
+    False -> erlang_read("")
+  }
+  let str = string.to_graphemes(str)
+  let events = parse_events(str, "", [], False)
+  push_events(events)
+  input_loop(is_raw_mode)
+}
+
+fn push_events(events: List(Result(Event, EventError))) {
+  case events {
+    [] -> Nil
+    [e, ..rest] -> {
+      push(e)
+      push_events(rest)
+    }
+  }
 }
 
 /// Get keyboard enhancement flags. See <https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement>
