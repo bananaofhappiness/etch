@@ -129,8 +129,8 @@ fn handle_input() {
           case input.get_keyboard_enhancement_flags() {
             Ok(f) -> {
               stdout.execute([
-                // command.MoveTo(0, 0),
-                // command.Clear(terminal.FromCursorDown),
+                command.MoveTo(0, 0),
+                command.Clear(terminal.FromCursorDown),
                 command.Println(default_text1),
                 command.Println(default_text2),
                 command.Println(default_text3),
@@ -146,8 +146,8 @@ fn handle_input() {
         }
         _ -> {
           stdout.execute([
-            // command.MoveTo(0, 0),
-            // command.Clear(terminal.FromCursorDown),
+            command.MoveTo(0, 0),
+            command.Clear(terminal.FromCursorDown),
             command.Println(default_text1),
             command.Println(default_text2),
             command.Println(default_text3),

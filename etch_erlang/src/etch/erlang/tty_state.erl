@@ -16,9 +16,16 @@ set_raw(IsRaw) ->
     ets:insert(tty_state, {raw_mode, IsRaw}).
 
 is_raw_mode() ->
-    case ets:lookup(tty_state, raw_mode) of
-        [{raw_mode, true}] ->
-            true;
+    case ets:whereis(tty_state) of
+        undefined ->
+            ets:new(tty_state, [named_table, public, set]),
+            ets:insert(tty_state, {raw_mode, false}),
+            false;
         _ ->
-            false
+            case ets:lookup(tty_state, raw_mode) of
+                [{raw_mode, true}] ->
+                    true;
+                _ ->
+                    false
+            end
     end.

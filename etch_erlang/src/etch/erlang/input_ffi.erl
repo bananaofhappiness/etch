@@ -11,7 +11,6 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-    process_flag(trap_exit, true),
     gen_event:add_handler(erl_signal_server, signal_handler, self()),
     {ok,
      #state{queue = queue:new(),
@@ -92,9 +91,5 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-handle_info({'EXIT', Pid, _Reason}, #state{input_loop_pid = Pid} = S) ->
-    {noreply,
-     S#state{input_loop_pid =
-                 spawn_link(etch@erlang@input, input_loop, [tty_state:is_raw_mode()])}};
 handle_info(_Info, S) ->
     {noreply, S}.

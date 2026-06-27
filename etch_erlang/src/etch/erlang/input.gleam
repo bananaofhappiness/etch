@@ -1,19 +1,11 @@
-import etch/erlang/tty.{is_raw_mode}
 import etch/event.{
   type Event, type EventError, type KeyboardEnhancementFlag, FailedToParseEvent,
   parse_cursor_position, parse_events, parse_keyboard_enhancement_flags,
 }
 import etch/internal/consts.{csi}
-import gleam/erlang/process.{type Pid}
 import gleam/io
 import gleam/option.{type Option}
 import gleam/string
-
-@external(erlang, "input_ffi", "start_link")
-fn start_link() -> Nil
-
-@external(erlang, "tty_state", "init")
-fn init_tty_state() -> Nil
 
 /// Checks if there is an [`Event`](https://hexdocs.pm/etch/etch/event.html#Event) available.
 /// Returns None if no events were received within the timeout.
