@@ -13,6 +13,9 @@ fn enter_raw_ffi() -> Result(Nil, TerminalError)
 @external(erlang, "terminal_ffi", "exit_raw")
 fn exit_raw_ffi() -> Result(Nil, TerminalError)
 
+@external(erlang, "input_ffi", "restart_or_start_input_loop")
+fn restart_or_start_input_loop() -> Nil
+
 @external(erlang, "tty_state", "set_raw")
 fn set_raw(is_raw: Bool) -> Nil
 
@@ -34,7 +37,16 @@ pub fn window_size() -> Result(#(Int, Int), TerminalError)
 /// This is necessary for terminal UI applications that need to handle
 /// keyboard input and mouse events directly.
 pub fn enter_raw() -> Result(Nil, TerminalError) {
-  todo
+  case enter_raw_ffi() {
+    Ok(_) -> {
+      set_raw(True)
+      restart_or_start_input_loop()
+      Ok(Nil)
+    }
+    Error(e) -> {
+      Error(e)
+    }
+  }
 }
 
 /// Exits raw mode.
@@ -45,12 +57,14 @@ pub fn enter_raw() -> Result(Nil, TerminalError) {
 /// - Input is not line-buffered (characters are available immediately)
 /// - Some special characters are not processed by the terminal
 pub fn exit_raw() -> Result(Nil, TerminalError) {
-  todo
+  case exit_raw_ffi() {
+    Ok(_) -> {
+      set_raw(False)
+      restart_or_start_input_loop()
+      Ok(Nil)
+    }
+    Error(e) -> {
+      Error(e)
+    }
+  }
 }
-// it's kinda stupid, but i have to move internal input code to this file.
-// reason: to correctly enter raw mode. because erlang_read_line blocks the thread,
-// after entering raw mode you need to press enter once more after calling enter_raw()
-// (see input_loop()). so i decided to just kill the input_loop() process and restart
-// it. for that, i need to know and store its pid. but i can't restart input_loop()
-// from tty.gleam without importing from input.gleam, which already imports from
-// tty.gleam, and gleam doesn't allow circular dependencies.

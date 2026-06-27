@@ -92,7 +92,6 @@ pub fn main() {
       0,
     )
   let state = spawn_fruit(state)
-  input.init_event_server()
   loop(state)
 }
 

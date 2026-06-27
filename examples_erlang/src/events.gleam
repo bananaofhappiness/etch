@@ -30,8 +30,6 @@ pub fn main() {
       event.ReportAssociatedText,
     ]),
   ])
-  // Make sure you init event server before handling user input and events.
-  input.init_event_server()
   loop()
 }
 

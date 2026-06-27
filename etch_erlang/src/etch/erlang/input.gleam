@@ -19,13 +19,13 @@ fn init_tty_state() -> Nil
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](input.html#read).
 @external(erlang, "input_ffi", "poll")
-fn poll(timeout: Int) -> Option(Result(Event, EventError))
+pub fn poll(timeout: Int) -> Option(Result(Event, EventError))
 
 /// Checks if there is an [`Event`](https://hexdocs.pm/etch/etch/event.html#Event) available.
 /// Waits forever for an available event.
 /// See also [`poll`](input.html#poll).
 @external(erlang, "input_ffi", "read")
-fn read() -> Option(Result(Event, EventError))
+pub fn read() -> Option(Result(Event, EventError))
 
 @external(erlang, "io", "get_chars")
 fn get_chars(prompt: String, n: Int) -> String
@@ -35,12 +35,6 @@ fn erlang_read(prompt: String) -> String
 
 @external(erlang, "input_ffi", "push")
 fn push(event: Result(Event, EventError)) -> Nil
-
-/// Initializes the event server responsible for listening for events.
-pub fn init_event_server() {
-  init_tty_state()
-  start_link()
-}
 
 @internal
 pub fn input_loop(is_raw_mode: Bool) {
