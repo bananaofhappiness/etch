@@ -1,7 +1,6 @@
 //// This module provides functionality to capture different events like
 //// pressing keys, mouse movement etc.
-//// In order to be able to read events, [`init_event_server`](event.html#init_event_server)
-//// must be called at the start of the application. See `events` example.
+//// See `events` example in `examples_erlang` and `examples_javascript`.
 //// ```gleam
 //// import etch/command
 //// import etch/event.{Key, Mouse, init_event_server}
@@ -11,7 +10,6 @@
 ////
 //// pub fn main() {
 ////   terminal.enter_raw()
-////   init_event_server()
 ////   loop()
 //// }
 ////

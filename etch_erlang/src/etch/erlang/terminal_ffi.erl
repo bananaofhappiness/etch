@@ -5,6 +5,8 @@
 enter_raw() ->
     try
         shell:start_interactive({noshell, raw}),
+        tty_state:set_raw(true),
+        input_ffi:restart_or_start_input_loop(),
         {ok, nil}
     catch
         _:_ ->
@@ -14,6 +16,8 @@ enter_raw() ->
 exit_raw() ->
     try
         shell:start_interactive(noshell),
+        tty_state:set_raw(false),
+        input_ffi:restart_or_start_input_loop(),
         {ok, nil}
     catch
         _:_ ->

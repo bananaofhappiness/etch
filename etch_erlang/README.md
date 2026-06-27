@@ -22,16 +22,14 @@ The package exposes two modules:
   - `window_size`
 
 - **`etch/erlang/input`** — Event-driven input handling:
-  - `init_event_server`, `poll`, `read`
+  - `poll`, `read`
   - `get_cursor_position`, `get_keyboard_enhancement_flags`
 
 ```gleam
 import etch/erlang/tty
-import etch/erlang/input
 
 pub fn main() {
   let assert Ok(_) = tty.enter_raw()
-  input.init_event_server()
   // ... handle events ...
 }
 ```

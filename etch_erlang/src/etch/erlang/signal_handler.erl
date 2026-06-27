@@ -12,9 +12,9 @@ init(Subject) ->
 handle_event(sigwinch, State) ->
     case terminal_ffi:window_size() of
         {ok, {Cols, Rows}} ->
-            event_ffi:push({ok, {resize, Cols, Rows}});
+            input_ffi:push({ok, {resize, Cols, Rows}});
         _ ->
-            event_ffi:push({error, could_not_get_window_size})
+            input_ffi:push({error, could_not_get_window_size})
     end,
     {ok, State};
 handle_event(_Event, State) ->
