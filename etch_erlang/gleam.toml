@@ -7,6 +7,7 @@ repository = { type = "github", user = "bananaofhappiness", repo = "etch" }
 [dependencies]
 gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 gleam_erlang = ">= 1.3.0 and < 2.0.0"
+# etch = ">= 1.4.0 and < 2.0.0"
 etch = { path = ".." }
 
 [dev_dependencies]
