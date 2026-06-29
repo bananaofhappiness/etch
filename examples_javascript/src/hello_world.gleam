@@ -23,8 +23,6 @@ pub fn main() {
   // We get windows size so we can center our rainbow background
   let #(x, y) = tty.window_size() |> result.unwrap(#(0, 0))
   draw_centered_text(x, y)
-  // make sure to init event server before listening to events.
-  input.init_event_server()
   loop()
 }
 
