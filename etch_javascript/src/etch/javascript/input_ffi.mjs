@@ -1,10 +1,20 @@
 import { None, Some } from "../../../gleam_stdlib/gleam/option.mjs";
 import { Ok, Error } from "../../../prelude.mjs";
 import { Resize } from "../../../etch/etch/event.mjs";
+import { FailedToParseEvent } from "../../../etch/etch/event.mjs";
 import { window_size } from "./terminal_ffi.mjs";
 let queue = [];
 
 let resolvers = [];
+
+let is_running = false;
+
+export function ensure_running(run) {
+  if (!is_running) {
+    run();
+    is_running = true;
+  }
+}
 
 export function get_chars() {
   return new Promise((resolve, reject) => {

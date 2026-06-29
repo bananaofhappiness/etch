@@ -15,25 +15,39 @@ fn get_chars() -> Promise(Array(Int))
 @external(javascript, "./input_ffi.mjs", "push")
 fn push(event: Result(Event, EventError)) -> Nil
 
+@external(javascript, "./input_ffi.mjs", "poll")
+fn poll_ffi(timeout: Int) -> Promise(Option(Result(Event, EventError)))
+
+@external(javascript, "./input_ffi.mjs", "read")
+fn read_ffi() -> Promise(Option(Result(Event, EventError)))
+
+@external(javascript, "./input_ffi.mjs", "ensure_running")
+fn ensure_running(fun: fn() -> Nil) -> Nil
+
 /// Checks if there is an [`Event`](https://hexdocs.pm/etch/etch/event.html#Event) available.
 /// Returns None if no events were received within the timeout.
 /// See also [`read`](input.html#read).
-@external(javascript, "./input_ffi.mjs", "poll")
-pub fn poll(timeout: Int) -> Promise(Option(Result(Event, EventError)))
+pub fn poll(timeout: Int) -> Promise(Option(Result(Event, EventError))) {
+  ensure_running(init_event_server)
+  poll_ffi(timeout)
+}
 
 /// Checks if there is an [`Event`](https://hexdocs.pm/etch/etch/event.html#Event) available.
 /// Waits forever for an available event.
 /// See also [`poll`](input.html#poll).
-@external(javascript, "./input_ffi.mjs", "read")
-pub fn read() -> Promise(Option(Result(Event, EventError)))
+pub fn read() -> Promise(Option(Result(Event, EventError))) {
+  ensure_running(init_event_server)
+  read_ffi()
+}
 
 @external(javascript, "./input_ffi.mjs", "handle_sigwinch")
 fn handle_sigwinch() -> Nil
 
 /// Initializes the event server responsible for listening for events.
-pub fn init_event_server() {
+fn init_event_server() {
   handle_sigwinch()
   input_loop()
+  Nil
 }
 
 fn input_loop() {
