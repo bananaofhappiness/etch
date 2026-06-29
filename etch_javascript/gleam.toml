@@ -10,6 +10,7 @@ target = "javascript"
 
 [dependencies]
 gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+# etch = ">= 1.4.0 and < 2.0.0"
 etch = { path = ".." }
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
 
