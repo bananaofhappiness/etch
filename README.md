@@ -57,25 +57,27 @@ Here's a basic template to get you started with Etch:
 
 ```gleam
 import etch/command
+import etch/stdout.{Queue, execute, flush, queue}
 import etch/style
-import etch/stdout.{type Queue, execute, flush, queue}
+import etch/terminal
 
 pub fn main() {
   // Execute `Commands`
   execute([
     command.EnterAlternateScreen,
     command.HideCursor,
-    command.Clear(terminal.All)
+    command.Clear(terminal.All),
   ])
 
   // Queue `Commands`
-  let q = Queue([
-    command.SetForegroundColor(style.Red),
-    command.SetBackgroundColor(style.Black),
-  ])
+  let q =
+    Queue([
+      command.SetForegroundColor(style.Red),
+      command.SetBackgroundColor(style.Black),
+    ])
   let text = "Styled text"
-  let q = queue(q, [command.Println(text)])
-  
+  let q = queue(q, [command.Println(text), command.ResetColor])
+
   // Flush queued `Commands`
   flush(q)
 }
