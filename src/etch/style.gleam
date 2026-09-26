@@ -64,7 +64,7 @@ pub type Attribute {
 }
 
 /// Allows to save style (foreground and background [`Colors`](style.html#Color))
-/// and [`Attributes`](style.html#Attribute))
+/// and [`Attributes`](style.html#Attribute)
 /// and use it later by calling [with_style](style.html#with_style).
 pub type Style {
   Style(

@@ -3,13 +3,20 @@
 //// See `events` example in `examples_erlang` and `examples_javascript`.
 //// ```gleam
 //// import etch/command
-//// import etch/event.{Key, Mouse, init_event_server}
+//// import etch/erlang/input
+//// import etch/erlang/tty
+//// import etch/event.{Char, Esc, Key, Mouse}
 //// import etch/stdout
 //// import etch/terminal
+//// import gleam/int
 //// import gleam/option.{None, Some}
 ////
+//// @external(erlang, "erlang", "halt")
+//// fn exit(n: Int) -> Nil
+////
 //// pub fn main() {
-////   terminal.enter_raw()
+////   let assert Ok(_) = tty.enter_raw()
+////   stdout.execute([command.EnterAlternateScreen, command.EnableMouseCapture])
 ////   loop()
 //// }
 ////
@@ -19,15 +26,31 @@
 //// }
 ////
 //// fn handle_input() {
-////   case event.read() {
-////     Some(Ok(Mouse(_m))) -> {
+////   case input.read() {
+////     Some(Ok(Mouse(m))) -> {
 ////       stdout.execute([
+////         command.MoveTo(0, 0),
+////         command.Clear(terminal.FromCursorDown),
 ////         command.Println("Got mouse event"),
+////         command.Println("Row: " <> int.to_string(m.row)),
+////         command.Println("Column: " <> int.to_string(m.column)),
 ////       ])
 ////     }
-////     Some(Ok(Key(s))) -> {
+////     // Make sure to shutdown gracefully
+////     Some(Ok(Key(k))) if k.code == Esc || k.code == Char("q") -> {
 ////       stdout.execute([
-////         command.Println("Got key event: \"" <> event.to_string(s.code) <> "\""),
+////         command.MoveTo(0, 0),
+////         command.Clear(terminal.FromCursorDown),
+////         command.DisableMouseCapture,
+////         command.LeaveAlternateScreen,
+////       ])
+////       exit(0)
+////     }
+////     Some(Ok(Key(k))) -> {
+////       stdout.execute([
+////         command.MoveTo(0, 0),
+////         command.Clear(terminal.FromCursorDown),
+////         command.Println("Got key event: \"" <> event.to_string(k.code) <> "\""),
 ////       ])
 ////     }
 ////     Some(_) -> Nil
